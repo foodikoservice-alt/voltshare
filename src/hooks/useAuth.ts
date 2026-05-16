@@ -11,13 +11,20 @@ interface AuthState {
 
 export function useAuth() {
   const [state, setState] = useState<AuthState>({
-    role: localStorage.getItem('volt_role') as Role | null,
-    username: localStorage.getItem('volt_username'),
-    isEditor: localStorage.getItem('volt_role') === 'editor',
+    role: null,
+    username: null,
+    isEditor: false,
     loading: false,
   });
 
   const login = useCallback(async (username: string, passcode: string) => {
+    // Basic input validation to reject clearly malformed credentials
+    const usernameValid = /^[a-zA-Z0-9_]{3,30}$/.test(username);
+    const passcodeValid = /^[0-9]{4,6}$/.test(passcode);
+    if (!usernameValid || !passcodeValid) {
+      console.warn('Login attempt with invalid input format');
+      return false;
+    }
     setState(s => ({ ...s, loading: true }));
     try {
       const { data, error } = await supabase
@@ -32,8 +39,6 @@ export function useAuth() {
       }
 
       const role = data.role as Role;
-      localStorage.setItem('volt_role', role);
-      localStorage.setItem('volt_username', username);
       
       setState({
         role,
@@ -50,8 +55,6 @@ export function useAuth() {
   }, []);
 
   const logout = useCallback(() => {
-    localStorage.removeItem('volt_role');
-    localStorage.removeItem('volt_username');
     setState({
       role: null,
       username: null,
