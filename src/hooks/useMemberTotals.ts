@@ -71,8 +71,9 @@ export function useMemberTotals(members: Member[], selectedMonth?: string) {
       const memberMap = new Map<string, { units: number; cost: number }>();
 
       (data ?? []).forEach((usage: Record<string, unknown>) => {
-        const current = memberMap.get(usage.member_id) || { units: 0, cost: 0 };
-        memberMap.set(usage.member_id, {
+        const memberId = usage.member_id as string;
+        const current = memberMap.get(memberId) || { units: 0, cost: 0 };
+        memberMap.set(memberId, {
           units: current.units + Number(usage.units),
           cost: current.cost + Number(usage.cost),
         });
