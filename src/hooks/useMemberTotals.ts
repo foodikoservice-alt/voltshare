@@ -18,33 +18,59 @@ export function useMemberTotals(members: Member[], selectedMonth?: string) {
 
   const calculateTotals = useCallback(async () => {
     const currentMembers = membersRef.current;
-    if (currentMembers.length === 0) return;
+    if (currentMembers.length === 0) {
+      setLoading(false);
+      return;
+    }
 
     try {
-      /** Convert UTC ISO string → IST (UTC+5:30) YYYY-MM key */
-      function toMonthKey(isoDate: string): string {
-        const d = new Date(isoDate);
-        d.setMinutes(d.getMinutes() + 330);
-        return d.toISOString().slice(0, 7);
-      }
-
-      const { data, error } = await supabase
+      const query = supabase
         .from('member_usage')
-        .select('member_id, units, cost, meter_entries(opening_at)');
+        .select('member_id, units, cost');
+      
+      const currentMonth = monthRef.current;
+      
+      // Try server-side filtering first
+      // eslint-disable-next-line prefer-const
+      let { data, error } = await (currentMonth 
+        ? query.eq('usage_month', currentMonth) 
+        : query);
 
-      if (error) throw error;
+      // FALLBACK: If usage_month column doesn't exist yet (Postgres error 42703 or specific message)
+      const isMissingColumn = error && (
+        error.code === '42703' || 
+        error.message?.includes('usage_month') || 
+        error.message?.includes('column')
+      );
+
+      if (isMissingColumn) {
+        console.warn('Database column "usage_month" missing. Falling back to client-side filtering. Please run the migration SQL.');
+        const { data: allData, error: allErr } = await supabase
+          .from('member_usage')
+          .select('member_id, units, cost, meter_entries(opening_at)');
+        
+        if (allErr) throw allErr;
+
+        /** Convert UTC ISO string → IST (UTC+5:30) YYYY-MM key */
+        const toMonthKey = (isoDate: string): string => {
+          const d = new Date(isoDate);
+          d.setMinutes(d.getMinutes() + 330);
+          return d.toISOString().slice(0, 7);
+        };
+
+        data = (allData ?? []).filter((usage: Record<string, unknown>) => {
+          if (!currentMonth) return true;
+          const usageEntries = usage.meter_entries as Record<string, unknown> | Record<string, unknown>[];
+          const entry = Array.isArray(usageEntries) ? usageEntries[0] : usageEntries;
+          return entry?.opening_at && toMonthKey(entry.opening_at as string) === currentMonth;
+        });
+      } else if (error) {
+        throw error;
+      }
 
       const memberMap = new Map<string, { units: number; cost: number }>();
 
-      (data ?? []).forEach((usage: any) => {
-        // Filter by month if selected
-        const currentMonth = monthRef.current;
-        if (currentMonth) {
-          const entry = Array.isArray(usage.meter_entries) ? usage.meter_entries[0] : usage.meter_entries;
-          if (!entry?.opening_at) return;
-          if (toMonthKey(entry.opening_at) !== currentMonth) return;
-        }
-
+      (data ?? []).forEach((usage: Record<string, unknown>) => {
         const current = memberMap.get(usage.member_id) || { units: 0, cost: 0 };
         memberMap.set(usage.member_id, {
           units: current.units + Number(usage.units),

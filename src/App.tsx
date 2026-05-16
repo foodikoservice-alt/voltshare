@@ -5,6 +5,7 @@ import { useMeterEntries } from './hooks/useMeterEntries';
 import { useMemberTotals } from './hooks/useMemberTotals';
 import { useToast } from './hooks/useToast';
 import { useDarkMode } from './hooks/useDarkMode';
+import { useSettings } from './hooks/useSettings';
 import { calculateGrandTotals } from './utils/calculations';
 import { Header } from './components/Header';
 import { SummaryBar } from './components/SummaryBar';
@@ -19,6 +20,7 @@ import { LoadingSpinner } from './components/LoadingSpinner';
 
 function AppContent() {
   const { role, isEditor, login, logout, loading: authLoading } = useAuthContext();
+  const { unitRate } = useSettings();
   const { members, loading: membersLoading } = useMembers();
   const { entries, loading: entriesLoading, openDayEntries, lastClosedDay, addOpeningMeter, addClosingMeter, deleteEntry } = useMeterEntries(members);
   
@@ -45,7 +47,7 @@ function AppContent() {
     ? entries.filter(e => toISTMonthKey(e.opening_at) === selectedMonth)
     : entries;
 
-  const grandTotals = calculateGrandTotals(filteredEntries);
+  const grandTotals = calculateGrandTotals(filteredEntries, unitRate);
 
   // Human-readable label for the active month (e.g. "May '26")
   const monthLabel = selectedMonth
@@ -56,7 +58,7 @@ function AppContent() {
       })()
     : null;
 
-  const isLoading = membersLoading || entriesLoading || totalsLoading || authLoading;
+  const isLoading = authLoading || membersLoading || entriesLoading || totalsLoading;
 
   const handleLogin = async (username: string, passcode: string) => {
     const success = await login(username, passcode);
@@ -123,7 +125,7 @@ function AppContent() {
                       openDayEntries={openDayEntries}
                       lastClosedDay={lastClosedDay}
                       onAddOpeningMeter={async (data) => {
-                        const result = await addOpeningMeter(data);
+                        const result = await addOpeningMeter(data, unitRate);
                         await refreshTotals();
                         if (result?.nightEntryCreated) {
                           showToast(`Opening Meter logged · Night Shift auto-entry created (${result.nightUnits.toFixed(1)} units)`, 'success');
@@ -132,7 +134,7 @@ function AppContent() {
                         }
                       }}
                       onAddClosingMeter={async (entry, closingMeter) => {
-                        await addClosingMeter(entry, closingMeter);
+                        await addClosingMeter(entry, closingMeter, unitRate);
                         await refreshTotals();
                         showToast('Closing Meter logged & Day Shift usage saved', 'success');
                       }}

@@ -55,7 +55,7 @@ export function useMeterEntries(members: Member[]) {
     [entries]
   );
 
-  const addOpeningMeter = async (formData: OpeningMeterFormData) => {
+  const addOpeningMeter = async (formData: OpeningMeterFormData, rate: number = 14) => {
     const opening = parseFloat(formData.opening_meter);
 
     const { data: allEntries } = await supabase
@@ -90,6 +90,7 @@ export function useMeterEntries(members: Member[]) {
             usage_units: units,
             opening_at: lastClosed.closing_at || new Date().toISOString(),
             closing_at: new Date().toISOString(),
+            rate_per_unit: rate,
           })
           .select()
           .single();
@@ -117,7 +118,8 @@ export function useMeterEntries(members: Member[]) {
         status: 'open',
         start_meter: opening,
         opening_at: new Date().toISOString(),
-        notes: formData.notes || null,
+        notes: 'notes' in formData ? (formData as {notes?: string}).notes || null : null,
+        rate_per_unit: rate,
       });
 
     if (error) throw error;
@@ -125,7 +127,7 @@ export function useMeterEntries(members: Member[]) {
     return { nightEntryCreated, nightUnits };
   };
 
-  const addClosingMeter = async (openEntry: MeterEntry, closingMeter: number) => {
+  const addClosingMeter = async (openEntry: MeterEntry, closingMeter: number, rate: number = 14) => {
     const usage_units = calculateUsage(openEntry.start_meter, closingMeter);
 
     const { data: closed, error } = await supabase
@@ -135,6 +137,7 @@ export function useMeterEntries(members: Member[]) {
         usage_units,
         status: 'closed',
         closing_at: new Date().toISOString(),
+        rate_per_unit: rate,
       })
       .eq('id', openEntry.id)
       .select()

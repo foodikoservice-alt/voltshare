@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import type { MeterEntry, Role } from '../types/app.types';
 import { formatUnits, formatCost, formatTimestamp } from '../utils/formatters';
-import { getSplitCount, COST_PER_UNIT } from '../utils/calculations';
+import { getSplitCount, DEFAULT_COST_PER_UNIT } from '../utils/calculations';
 import { Trash2, Clock, CheckCircle2, ArrowRight } from 'lucide-react';
 
 interface HistoryTableProps {
@@ -114,7 +114,7 @@ export const HistoryTable: React.FC<HistoryTableProps> = ({ entries, role, onDel
             <tbody className="divide-y divide-hairline">
               {sortedEntries.map((entry) => {
                 const splitCount = getSplitCount(entry.entry_type, entry.is_weekend);
-                const perPersonCost = entry.usage_units ? (entry.usage_units / splitCount) * COST_PER_UNIT : 0;
+                const perPersonCost = entry.usage_units ? (entry.usage_units / splitCount) * (entry.rate_per_unit || DEFAULT_COST_PER_UNIT) : 0;
                 return (
                   <tr key={entry.id} className={`hover:bg-ink/[0.02] transition-colors group ${entry.status === 'open' ? 'bg-tertiary/5' : ''}`}>
                     <td className="px-5 py-4">
@@ -179,7 +179,7 @@ export const HistoryTable: React.FC<HistoryTableProps> = ({ entries, role, onDel
         <div className="md:hidden divide-y divide-hairline">
           {sortedEntries.map((entry) => {
             const splitCount = getSplitCount(entry.entry_type, entry.is_weekend);
-            const perPersonCost = entry.usage_units ? (entry.usage_units / splitCount) * COST_PER_UNIT : 0;
+            const perPersonCost = entry.usage_units ? (entry.usage_units / splitCount) * (entry.rate_per_unit || DEFAULT_COST_PER_UNIT) : 0;
             const isOpen = entry.status === 'open';
 
             return (

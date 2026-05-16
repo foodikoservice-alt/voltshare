@@ -1,6 +1,6 @@
 import type { EntryType, MeterEntry, Member, GrandTotals } from '../types/app.types';
 
-export const COST_PER_UNIT = 14;
+export const DEFAULT_COST_PER_UNIT = 14;
 
 export function getSplitCount(entryType: EntryType, isWeekend: boolean): number {
   if (isWeekend) return 4;
@@ -15,8 +15,8 @@ export function calculatePerPerson(usage: number, entryType: EntryType, isWeeken
   return parseFloat((usage / getSplitCount(entryType, isWeekend)).toFixed(1));
 }
 
-export function calculateCost(units: number): number {
-  return parseFloat((units * COST_PER_UNIT).toFixed(2));
+export function calculateCost(units: number, rate: number = DEFAULT_COST_PER_UNIT): number {
+  return parseFloat((units * rate).toFixed(2));
 }
 
 export function buildMemberUsageRows(
@@ -38,10 +38,18 @@ export function buildMemberUsageRows(
     member_id: m.id,
     meter_entry_id: entry.id,
     units: perPerson,
+    usage_month: getISTMonthKey(new Date().toISOString())
   }));
 }
 
-export function calculateGrandTotals(entries: MeterEntry[]): GrandTotals {
+/** Get IST-aware YYYY-MM month key */
+export function getISTMonthKey(isoDate: string): string {
+  const d = new Date(isoDate);
+  d.setMinutes(d.getMinutes() + 330);
+  return d.toISOString().slice(0, 7);
+}
+
+export function calculateGrandTotals(entries: MeterEntry[], rate: number = DEFAULT_COST_PER_UNIT): GrandTotals {
   const closed    = entries.filter(e => e.status === 'closed');
   const open      = entries.filter(e => e.status === 'open');
   const nightAuto = entries.filter(e => e.is_auto);
@@ -50,7 +58,7 @@ export function calculateGrandTotals(entries: MeterEntry[]): GrandTotals {
   );
   return {
     total_units,
-    total_cost: parseFloat((total_units * COST_PER_UNIT).toFixed(2)),
+    total_cost: parseFloat((total_units * rate).toFixed(2)),
     entry_count: closed.length,
     open_count: open.length,
     night_auto_count: nightAuto.length,
@@ -68,6 +76,6 @@ export function calculateNightPreview(
   if (night_units <= 0) return { night_units: null, night_cost: null };
   return {
     night_units,
-    night_cost: calculateCost(night_units),
+    night_cost: calculateCost(night_units, DEFAULT_COST_PER_UNIT),
   };
 }

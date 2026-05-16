@@ -8,7 +8,7 @@ interface SummaryBarProps {
   monthLabel?: string | null;
 }
 
-const StatCard = ({ label, value, icon: Icon, color, shadowColor, glowColor }: { label: string; value: string | number; icon: any; color: string; shadowColor: string; glowColor: string }) => (
+const StatCard = ({ label, value, icon: Icon, color, shadowColor, glowColor }: { label: string; value: string | number; icon: React.ElementType; color: string; shadowColor: string; glowColor: string }) => (
   <div className="relative overflow-hidden glass rounded-2xl p-3.5 sm:p-4 flex items-center gap-3 sm:gap-4 transition-all hover:scale-[1.02] hover:bg-surface-card group">
     <div className={`absolute -right-4 -bottom-4 w-16 h-16 rounded-full blur-2xl opacity-20 transition-opacity group-hover:opacity-40 ${glowColor}`} />
     <div className={`relative z-10 p-2 sm:p-2.5 rounded-xl ${color} shadow-lg ${shadowColor} transition-transform group-hover:scale-110 shrink-0`}>

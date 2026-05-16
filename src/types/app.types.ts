@@ -22,6 +22,7 @@ export interface MeterEntry {
   opening_at: string;
   closing_at: string | null;
   notes?: string;
+  rate_per_unit: number | null;
   created_at: string;
 }
 
@@ -31,6 +32,7 @@ export interface MemberUsage {
   meter_entry_id: string;
   units: number;
   cost: number;
+  usage_month: string | null;
 }
 
 export interface MemberTotal {

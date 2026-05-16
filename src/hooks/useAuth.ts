@@ -24,7 +24,7 @@ export function useAuth() {
             loading: false,
           };
         }
-      } catch (e) {
+      } catch {
         console.error('Failed to parse saved session');
       }
     }
