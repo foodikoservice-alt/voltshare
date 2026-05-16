@@ -5,6 +5,7 @@ import { Zap, IndianRupee, Moon, Clock } from 'lucide-react';
 
 interface SummaryBarProps {
   totals: GrandTotals;
+  monthLabel?: string | null;
 }
 
 const StatCard = ({ label, value, icon: Icon, color, shadowColor, glowColor }: { label: string; value: string | number; icon: any; color: string; shadowColor: string; glowColor: string }) => (
@@ -20,9 +21,16 @@ const StatCard = ({ label, value, icon: Icon, color, shadowColor, glowColor }: {
   </div>
 );
 
-export const SummaryBar: React.FC<SummaryBarProps> = ({ totals }) => {
+export const SummaryBar: React.FC<SummaryBarProps> = ({ totals, monthLabel }) => {
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
+    <div className="space-y-2">
+      <div className="flex items-center justify-between px-1">
+        <h2 className="text-sm font-bold text-muted uppercase tracking-widest">Overview</h2>
+        {monthLabel && (
+          <span className="text-xs font-bold text-primary">{monthLabel}</span>
+        )}
+      </div>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
       <StatCard
         label="Total Units"
         value={formatUnits(totals.total_units)}
@@ -55,6 +63,7 @@ export const SummaryBar: React.FC<SummaryBarProps> = ({ totals }) => {
         shadowColor="shadow-tertiary/20"
         glowColor="bg-tertiary"
       />
+      </div>
     </div>
   );
 };

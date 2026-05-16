@@ -32,7 +32,28 @@ function AppContent() {
     return d.toISOString().slice(0, 7); // "YYYY-MM"
   });
 
-  const grandTotals = calculateGrandTotals(entries);
+  /** Convert a UTC ISO string to IST YYYY-MM */
+  const toISTMonthKey = (iso: string) => {
+    const d = new Date(iso);
+    d.setMinutes(d.getMinutes() + 330);
+    return d.toISOString().slice(0, 7);
+  };
+
+  const filteredEntries = selectedMonth
+    ? entries.filter(e => toISTMonthKey(e.opening_at) === selectedMonth)
+    : entries;
+
+  const grandTotals = calculateGrandTotals(filteredEntries);
+
+  // Human-readable label for the active month (e.g. "May '26")
+  const monthLabel = selectedMonth
+    ? (() => {
+        const [y, m] = selectedMonth.split('-');
+        return new Date(Number(y), Number(m) - 1, 1)
+          .toLocaleString('en-IN', { month: 'long', year: '2-digit' });
+      })()
+    : null;
+
   const isLoading = membersLoading || entriesLoading || totalsLoading || authLoading;
 
   const handleLogin = async (username: string, passcode: string) => {
@@ -73,7 +94,7 @@ function AppContent() {
           ) : (
             <>
               <section>
-                <SummaryBar totals={grandTotals} />
+                <SummaryBar totals={grandTotals} monthLabel={monthLabel} />
               </section>
 
               <Charts
