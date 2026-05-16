@@ -35,10 +35,10 @@ export function useMemberShiftBreakdown(members: Member[]) {
         member_id: string;
         units: number;
         cost: number;
-        meter_entries: { entry_type: string } | null;
+        meter_entries: { entry_type: string }[] | null;
       }) => {
         const cur = map.get(row.member_id) ?? { day_u: 0, night_u: 0, day_c: 0, night_c: 0 };
-        const isDay = row.meter_entries?.entry_type === 'day_shift';
+        const isDay = row.meter_entries?.[0]?.entry_type === 'day_shift';
         map.set(row.member_id, {
           day_u:   cur.day_u   + (isDay ? Number(row.units) : 0),
           night_u: cur.night_u + (isDay ? 0 : Number(row.units)),

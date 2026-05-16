@@ -82,7 +82,7 @@ function SimpleBar({ title, values, formatTick, formatTooltip }: SimpleBarProps)
         ...tooltipStyle,
         callbacks: {
           title: (items: { label: string }[]) => items[0]?.label ?? '',
-          label: (ctx: { parsed: { y: number } }) => ` ${formatTooltip(ctx.parsed.y)}`,
+          label: (ctx: { parsed: { y: number | null } }) => ` ${formatTooltip(ctx.parsed.y ?? 0)}`,
         },
       },
     },
