@@ -15,7 +15,7 @@ export function OpenDayEntryCard({ entry, selected, onClick }: OpenDayEntryCardP
       className={`w-full text-left p-4 rounded-2xl border-2 transition-all min-h-[44px] active:scale-[0.98] ${
         selected
           ? 'border-primary/50 bg-primary/10'
-          : 'border-white/5 bg-surface-container-low hover:border-white/10'
+          : 'border-hairline bg-surface-container-low hover:border-primary/30'
       }`}
     >
       <div className="flex items-center justify-between">
@@ -27,8 +27,8 @@ export function OpenDayEntryCard({ entry, selected, onClick }: OpenDayEntryCardP
         </div>
         {selected && <span className="text-primary text-lg font-bold">✓</span>}
       </div>
-      <p className="text-sm font-bold text-slate-100 mt-2">Opening Meter: {entry.start_meter}</p>
-      <p className="text-[11px] text-text-muted font-medium mt-0.5">{formatTimestamp(entry.opening_at)}</p>
+      <p className="text-sm font-bold text-ink mt-2">Opening Meter: {entry.start_meter}</p>
+      <p className="text-[11px] text-muted font-medium mt-0.5">{formatTimestamp(entry.opening_at)}</p>
     </button>
   );
 }

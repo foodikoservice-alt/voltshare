@@ -11,11 +11,11 @@ const StatCard = ({ label, value, icon: Icon, color, shadowColor, glowColor }: {
   <div className="relative overflow-hidden glass rounded-2xl p-3.5 sm:p-4 flex items-center gap-3 sm:gap-4 transition-all hover:scale-[1.02] hover:bg-surface-card group">
     <div className={`absolute -right-4 -bottom-4 w-16 h-16 rounded-full blur-2xl opacity-20 transition-opacity group-hover:opacity-40 ${glowColor}`} />
     <div className={`relative z-10 p-2 sm:p-2.5 rounded-xl ${color} shadow-lg ${shadowColor} transition-transform group-hover:scale-110 shrink-0`}>
-      <Icon className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+      <Icon className="w-4 h-4 sm:w-5 sm:h-5 text-on-primary" />
     </div>
     <div className="relative z-10 min-w-0">
-      <p className="text-[9px] sm:text-[10px] text-text-muted uppercase font-black tracking-widest leading-none mb-1 truncate">{label}</p>
-      <p className="text-lg sm:text-xl font-black tracking-tight text-white truncate">{value}</p>
+      <p className="text-[9px] sm:text-[10px] text-muted uppercase font-black tracking-widest leading-none mb-1 truncate">{label}</p>
+      <p className="text-lg sm:text-xl font-black tracking-tight text-ink truncate">{value}</p>
     </div>
   </div>
 );

@@ -93,7 +93,7 @@ export const MeterForm: React.FC<MeterFormProps> = ({
   };
 
   return (
-    <div className="glass-lg rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-2xl">
+    <div className="glass-lg rounded-2xl sm:rounded-3xl p-4 sm:p-6">
       <div className="relative flex p-1 bg-surface-container-lowest rounded-2xl mb-4 sm:mb-6">
         <div
           className={`absolute top-1 bottom-1 w-[calc(50%-4px)] bg-tertiary rounded-xl transition-all duration-300 ease-out shadow-lg shadow-tertiary/25 ${
@@ -103,7 +103,7 @@ export const MeterForm: React.FC<MeterFormProps> = ({
         <button
           onClick={() => setTab('opening')}
           className={`relative z-10 flex-1 flex items-center justify-center gap-2 py-3 sm:py-3.5 text-sm font-bold transition-colors duration-300 min-h-[48px] ${
-            tab === 'opening' ? 'text-white' : 'text-text-muted hover:text-slate-300'
+            tab === 'opening' ? 'text-ink' : 'text-muted hover:text-body-strong'
           }`}
         >
           <Plus className="w-4 h-4" />
@@ -112,14 +112,14 @@ export const MeterForm: React.FC<MeterFormProps> = ({
         <button
           onClick={() => setTab('closing')}
           className={`relative z-10 flex-1 flex items-center justify-center gap-2 py-3 sm:py-3.5 text-sm font-bold transition-colors duration-300 min-h-[48px] ${
-            tab === 'closing' ? 'text-white' : 'text-text-muted hover:text-slate-300'
+            tab === 'closing' ? 'text-ink' : 'text-muted hover:text-body-strong'
           }`}
         >
           <Check className="w-4 h-4" />
           Closing Meter
           {openDayEntries.length > 0 && (
             <span className={`ml-1.5 px-2 py-0.5 text-[10px] rounded-full font-bold transition-colors ${
-              tab === 'closing' ? 'bg-white/20 text-white' : 'bg-tertiary/20 text-tertiary-light'
+              tab === 'closing' ? 'bg-primary/20 text-primary' : 'bg-tertiary/20 text-tertiary'
             }`}>
               {openDayEntries.length}
             </span>
@@ -130,7 +130,7 @@ export const MeterForm: React.FC<MeterFormProps> = ({
       {tab === 'opening' ? (
         <div className="space-y-3 sm:space-y-4">
           <div className="space-y-1.5">
-            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">
+            <label className="text-[10px] font-bold text-muted uppercase tracking-widest ml-1">
               Opening Meter Reading
             </label>
             <input
@@ -140,10 +140,10 @@ export const MeterForm: React.FC<MeterFormProps> = ({
               placeholder="e.g. 1280"
               value={openingMeter}
               onChange={e => setOpeningMeter(e.target.value)}
-              className={`input-field text-base ${errors.opening_meter ? 'border-rose-500/50' : ''}`}
+              className={`input-field text-base ${errors.opening_meter ? 'border-error/50' : ''}`}
             />
             {errors.opening_meter && (
-              <p className="text-xs text-rose-500 flex items-center gap-1">
+              <p className="text-xs text-error flex items-center gap-1">
                 <AlertCircle className="w-3 h-3" /> {errors.opening_meter}
               </p>
             )}
@@ -156,7 +156,7 @@ export const MeterForm: React.FC<MeterFormProps> = ({
               onChange={e => setIsWeekend(e.target.checked)}
               className="rounded"
             />
-            <span className="text-slate-300 font-medium">Weekend mode (all 4 members share costs equally)</span>
+            <span className="text-body-strong font-medium">Weekend mode (all 4 members share costs equally)</span>
           </label>
 
           {lastClosedDay && (
@@ -168,7 +168,7 @@ export const MeterForm: React.FC<MeterFormProps> = ({
           )}
 
           <div className="space-y-1.5">
-            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">
+            <label className="text-[10px] font-bold text-muted uppercase tracking-widest ml-1">
               Notes (Optional)
             </label>
             <textarea
@@ -197,7 +197,7 @@ export const MeterForm: React.FC<MeterFormProps> = ({
             />
           ) : (
             <>
-              <p className="text-xs text-text-muted font-medium">
+              <p className="text-xs text-muted font-medium">
                 Select the open session to close:
               </p>
 
@@ -215,7 +215,7 @@ export const MeterForm: React.FC<MeterFormProps> = ({
               {selectedEntry && (
                 <>
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">
+                    <label className="text-[10px] font-bold text-muted uppercase tracking-widest ml-1">
                       Closing Meter Reading
                     </label>
                     <input
@@ -225,11 +225,11 @@ export const MeterForm: React.FC<MeterFormProps> = ({
                       placeholder={`Must be > ${selectedEntry.start_meter}`}
                       value={closingMeter}
                       onChange={e => setClosingMeter(e.target.value)}
-                      className={`input-field text-base ${errors.closing_meter ? 'border-rose-500/50' : ''}`}
+                      className={`input-field text-base ${errors.closing_meter ? 'border-error/50' : ''}`}
                       autoFocus
                     />
                     {errors.closing_meter && (
-                      <p className="text-xs text-rose-500 flex items-center gap-1">
+                      <p className="text-xs text-error flex items-center gap-1">
                         <AlertCircle className="w-3 h-3" /> {errors.closing_meter}
                       </p>
                     )}

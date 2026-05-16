@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -15,23 +16,19 @@ ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend)
 
 const FONT = "'Inter', system-ui, sans-serif";
 
-// One colour per bar: Total=purple, Day=amber, Night=cyan
 const BAR_COLORS = {
   bg:     ['rgba(139,92,246,0.8)', 'rgba(251,191,36,0.8)', 'rgba(6,182,212,0.8)'],
   border: ['#8b5cf6',              '#fbbf24',               '#06b6d4'],
 };
 
-const tooltipStyle = {
-  backgroundColor: 'rgba(10, 6, 28, 0.95)',
-  borderColor:     'rgba(139, 92, 246, 0.25)',
-  borderWidth:     1,
-  padding:         12,
-  titleColor:      '#e2e8f0',
-  bodyColor:       '#94a3b8',
-  titleFont:       { family: FONT, size: 12, weight: 'bold' as const },
-  bodyFont:        { family: FONT, size: 11 },
-  cornerRadius:    10,
-};
+function useCSSVar(name: string, fallback: string) {
+  const [val, setVal] = useState(fallback);
+  useEffect(() => {
+    const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    if (v) setVal(v);
+  }, [name]);
+  return val;
+}
 
 // ─── Single Chart Component ───────────────────────────────────────────────────
 
@@ -43,6 +40,25 @@ interface SimpleBarProps {
 }
 
 function SimpleBar({ title, values, formatTick, formatTooltip }: SimpleBarProps) {
+  const ink      = useCSSVar('--color-ink', '#141413');
+  const body     = useCSSVar('--color-body', '#3d3d3a');
+  const muted    = useCSSVar('--color-muted', '#6c6a64');
+  const mutedSft = useCSSVar('--color-muted-soft', '#8e8b82');
+  const surface  = useCSSVar('--color-surface-card', '#efe9de');
+  const primary  = useCSSVar('--color-primary', '#cc785c');
+
+  const tooltipStyle = {
+    backgroundColor: surface + 'f0',
+    borderColor:     primary + '40',
+    borderWidth:     1,
+    padding:         12,
+    titleColor:      ink,
+    bodyColor:       body,
+    titleFont:       { family: FONT, size: 12, weight: 'bold' as const },
+    bodyFont:        { family: FONT, size: 11 },
+    cornerRadius:    10,
+  };
+
   const data = {
     labels: ['Total', 'Day', 'Night'],
     datasets: [
@@ -75,15 +91,15 @@ function SimpleBar({ title, values, formatTick, formatTooltip }: SimpleBarProps)
         grid:   { display: false },
         border: { display: false },
         ticks:  {
-          color: '#94a3b8',
+          color: muted,
           font:  { family: FONT, size: 13, weight: 'bold' as const },
         },
       },
       y: {
-        grid:   { color: 'rgba(255,255,255,0.05)' },
+        grid:   { color: ink + '10' },
         border: { display: false },
         ticks:  {
-          color: '#475569',
+          color: mutedSft,
           font:  { family: FONT, size: 10 },
           callback: (v: number | string) => formatTick(v),
         },
@@ -92,8 +108,8 @@ function SimpleBar({ title, values, formatTick, formatTooltip }: SimpleBarProps)
   };
 
   return (
-    <div className="rounded-2xl border border-white/5 bg-surface-container p-4 sm:p-6 space-y-3 shadow-xl">
-      <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">{title}</h3>
+    <div className="rounded-2xl border border-hairline bg-surface-card p-4 sm:p-6 space-y-3">
+      <h3 className="text-xs font-black text-muted uppercase tracking-widest">{title}</h3>
       <div style={{ height: 240 }}>
         <Bar data={data} options={options} />
       </div>
@@ -122,7 +138,7 @@ export function Charts({ members }: ChartsProps) {
 
   return (
     <section className="space-y-3">
-      <h2 className="text-sm font-bold text-slate-500 uppercase tracking-widest px-1">Analytics</h2>
+      <h2 className="text-sm font-bold text-muted uppercase tracking-widest px-1">Analytics</h2>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5">
         <SimpleBar

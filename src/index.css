@@ -5,46 +5,67 @@
 @variant dark (&:where(.dark, .dark *));
 
 @theme {
-  /* Brand colours */
-  --color-primary:       #3b82f6;
-  --color-primary-dark:  #2563eb;
-  --color-primary-light: #60a5fa;
+  /* ── Brand colours (Light theme — warm cream, coral primary) ── */
 
-  --color-secondary:       #10b981;
-  --color-secondary-dark:  #059669;
-  --color-secondary-light: #34d399;
+  /* Primary — Coral (per DESIGN.md) */
+  --color-primary:       #cc785c;
+  --color-primary-dark:  #a9583e;
+  --color-primary-light: #d9927a;
 
-  --color-tertiary:       #f59e0b;
-  --color-tertiary-dark:  #d97706;
-  --color-tertiary-light: #fbbf24;
+  /* Secondary — Teal accent */
+  --color-secondary:       #5db8a6;
+  --color-secondary-dark:  #4a9a8a;
+  --color-secondary-light: #7ecfbf;
 
-  --color-indigo:       #6366f1;
-  --color-indigo-dark:  #4f46e5;
-  --color-indigo-light: #818cf8;
+  /* Tertiary — Amber warm accent */
+  --color-tertiary:       #e8a55a;
+  --color-tertiary-dark:  #d48a3a;
+  --color-tertiary-light: #f0c080;
 
-  /* Surface scale (dark theme defaults) */
-  --color-surface:                    #0e131f;
-  --color-surface-dim:                #0e131f;
-  --color-surface-bright:             #343946;
-  --color-surface-container-lowest:   #080e1a;
-  --color-surface-container-low:      #161c28;
-  --color-surface-container:          #1a202c;
-  --color-surface-container-high:     #242a36;
-  --color-surface-container-highest:  #2f3542;
-  --color-surface-card:               #111827;
-  --color-surface-variant:            #2f3542;
+  --color-indigo:       #8b5cf6;
+  --color-indigo-dark:  #7c3aed;
+  --color-indigo-light: #a78bfa;
 
-  /* Status */
-  --color-error:           #ef4444;
-  --color-error-container: #93000a;
+  /* ── Surface scale (Light: warm cream canvas) ── */
+  --color-surface:                    #faf9f5;
+  --color-surface-dim:                #f5f0e8;
+  --color-surface-bright:             #faf9f5;
+  --color-surface-container-lowest:   #faf9f5;
+  --color-surface-container-low:      #f5f0e8;
+  --color-surface-container:          #f5f0e8;
+  --color-surface-container-high:     #efe9de;
+  --color-surface-container-highest:  #e8e0d2;
+  --color-surface-card:               #efe9de;
+  --color-surface-variant:            #e8e0d2;
 
-  /* Semantic text / border */
-  --color-border-muted: #1f2937;
-  --color-text-muted:   #6b7280;
+  /* ── Text (warm dark ink) ── */
+  --color-ink:       #141413;
+  --color-body:      #3d3d3a;
+  --color-body-strong: #252523;
+  --color-muted:     #6c6a64;
+  --color-muted-soft: #8e8b82;
+  --color-on-primary: #ffffff;
+  --color-on-dark:     #faf9f5;
+  --color-on-dark-soft: #a09d96;
+
+  /* ── Borders ── */
+  --color-hairline:       #e6dfd8;
+  --color-hairline-soft:  #ebe6df;
+  --color-border-muted:   #e6dfd8;
+
+  /* ── Status ── */
+  --color-error:           #c64545;
+  --color-error-container: #fce8e6;
+  --color-success:         #5db872;
+  --color-warning:         #d4a017;
+
+  /* ── Accents ── */
+  --color-accent-teal:  #5db8a6;
+  --color-accent-amber: #e8a55a;
+  --color-text-muted:   #6c6a64;
 
   /* Custom screens — xs: prefix for phones 375px+ */
   --breakpoint-xs: 375px;
-  /* Ensure sm/md/lg/xl are standard */
   --breakpoint-sm: 640px;
   --breakpoint-md: 768px;
   --breakpoint-lg: 1024px;
@@ -67,34 +88,83 @@
   }
 }
 
+/* ── Dark mode overrides ── */
+.dark {
+  --color-primary:       #3b82f6;
+  --color-primary-dark:  #2563eb;
+  --color-primary-light: #60a5fa;
+
+  --color-secondary:       #10b981;
+  --color-secondary-dark:  #059669;
+  --color-secondary-light: #34d399;
+
+  --color-tertiary:       #f59e0b;
+  --color-tertiary-dark:  #d97706;
+  --color-tertiary-light: #fbbf24;
+
+  --color-indigo:       #6366f1;
+  --color-indigo-dark:  #4f46e5;
+  --color-indigo-light: #818cf8;
+
+  --color-surface:                    #0e131f;
+  --color-surface-dim:                #0e131f;
+  --color-surface-bright:             #343946;
+  --color-surface-container-lowest:   #080e1a;
+  --color-surface-container-low:      #161c28;
+  --color-surface-container:          #1a202c;
+  --color-surface-container-high:     #242a36;
+  --color-surface-container-highest:  #2f3542;
+  --color-surface-card:               #111827;
+  --color-surface-variant:            #2f3542;
+
+  --color-ink:       #f1f5f9;
+  --color-body:      #cbd5e1;
+  --color-body-strong: #e2e8f0;
+  --color-muted:     #64748b;
+  --color-muted-soft: #475569;
+
+  --color-hairline:       #1f2937;
+  --color-hairline-soft:  #1f2937;
+  --color-border-muted:   #1f2937;
+
+  --color-error:           #ef4444;
+  --color-error-container: #93000a;
+  --color-text-muted:      #6b7280;
+}
+
 /* ── Global resets ── */
 html {
   scroll-behavior: smooth;
-  /* iOS safe area */
   padding-left: env(safe-area-inset-left);
   padding-right: env(safe-area-inset-right);
 }
 
 body {
-  @apply bg-surface text-slate-100 font-sans;
+  @apply bg-surface text-body font-sans;
   font-family: 'Inter', system-ui, sans-serif;
   -webkit-tap-highlight-color: transparent;
   overflow-y: scroll;
-  /* Bottom safe area for iOS home indicator */
   padding-bottom: env(safe-area-inset-bottom);
 }
 
 /* ── Glassmorphism utilities ── */
 @utility glass-sm {
-  @apply bg-surface-container-low/50 backdrop-blur-sm border border-white/5;
+  @apply backdrop-blur-sm border;
+  background-color: color-mix(in srgb, var(--color-surface-container-low) 50%, transparent);
+  border-color: var(--color-hairline);
 }
 
 @utility glass {
-  @apply bg-surface-card/80 backdrop-blur-md border border-white/10;
+  @apply backdrop-blur-md border;
+  background-color: color-mix(in srgb, var(--color-surface-card) 80%, transparent);
+  border-color: var(--color-hairline);
 }
 
 @utility glass-lg {
-  @apply bg-surface-container-highest/90 backdrop-blur-xl border border-primary/20;
+  @apply backdrop-blur-xl border;
+  background-color: color-mix(in srgb, var(--color-surface-container-high) 90%, transparent);
+  border-color: var(--color-primary);
+  border-color: color-mix(in srgb, var(--color-primary) 20%, transparent);
 }
 
 /* ── Badge ── */
@@ -103,56 +173,74 @@ body {
 }
 
 .badge-blue {
-  @apply bg-primary/20 text-primary-light border border-primary/30;
+  @apply bg-primary/20 text-primary border border-primary/30;
 }
 
 .badge-green {
-  @apply bg-secondary/20 text-secondary-light border border-secondary/30;
+  @apply bg-secondary/20 text-secondary border border-secondary/30;
 }
 
 .badge-amber {
-  @apply bg-tertiary/20 text-tertiary-light border border-tertiary/30;
+  @apply bg-tertiary/20 text-tertiary border border-tertiary/30;
 }
 
 .badge-purple {
   background: rgba(139,92,246,0.2);
   border: 1px solid rgba(139,92,246,0.3);
-  color: #a78bfa;
+  color: #8b5cf6;
 }
 
 /* ── Input ── */
 @utility input-field {
-  @apply w-full bg-surface-container-low border border-white/5 rounded-xl px-4 py-3 text-sm
-         focus:outline-none focus:border-primary/50 transition-all placeholder:text-text-muted
-         text-slate-100;
-  /* Prevent zoom on iOS (must be ≥ 16px effective) */
+  @apply w-full rounded-xl px-4 py-3 text-sm
+         focus:outline-none transition-all;
   font-size: 16px;
+  background-color: var(--color-surface-container-low);
+  border: 1px solid var(--color-hairline);
+  color: var(--color-ink);
+}
+.input-field:focus {
+  border-color: color-mix(in srgb, var(--color-primary) 50%, transparent);
+}
+.input-field::placeholder {
+  color: var(--color-muted);
 }
 
 /* ── Primary button ── */
 @utility btn-primary {
-  @apply w-full bg-primary hover:bg-primary-dark text-white font-bold py-3 rounded-xl
-         transition-all active:scale-[0.96] shadow-lg shadow-primary/20 disabled:opacity-60
+  @apply w-full font-bold py-3 rounded-xl
+         transition-all active:scale-[0.96] disabled:opacity-60
          disabled:cursor-not-allowed;
-  /* Comfortable touch target */
   min-height: 48px;
+  background-color: var(--color-primary);
+  color: var(--color-on-primary);
+  box-shadow: 0 10px 15px -3px color-mix(in srgb, var(--color-primary) 20%, transparent), 0 4px 6px -4px color-mix(in srgb, var(--color-primary) 20%, transparent);
+}
+.btn-primary:hover {
+  background-color: var(--color-primary-dark);
 }
 
 /* ── Neon glow helpers ── */
 @utility neon-glow-primary {
-  @apply shadow-[0_0_15px_rgba(59,130,246,0.4)];
+  box-shadow: 0 0 15px color-mix(in srgb, var(--color-primary) 40%, transparent);
 }
 
 @utility neon-glow-secondary {
-  @apply shadow-[0_0_15px_rgba(16,185,129,0.4)];
+  box-shadow: 0 0 15px color-mix(in srgb, var(--color-secondary) 40%, transparent);
 }
 
 @utility neon-glow-indigo {
-  @apply shadow-[0_0_15px_rgba(99,102,241,0.4)];
+  box-shadow: 0 0 15px color-mix(in srgb, var(--color-indigo) 40%, transparent);
 }
 
-.neon-line-primary  { @apply stroke-primary  drop-shadow-[0_0_8px_rgba(59,130,246,0.5)]; }
-.neon-line-secondary { @apply stroke-secondary drop-shadow-[0_0_8px_rgba(16,185,129,0.5)]; }
+.neon-line-primary {
+  stroke: var(--color-primary);
+  filter: drop-shadow(0 0 8px color-mix(in srgb, var(--color-primary) 50%, transparent));
+}
+.neon-line-secondary {
+  stroke: var(--color-secondary);
+  filter: drop-shadow(0 0 8px color-mix(in srgb, var(--color-secondary) 50%, transparent));
+}
 
 /* ── Animations ── */
 .animate-bounce-subtle {

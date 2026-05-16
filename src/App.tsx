@@ -50,7 +50,7 @@ function AppContent() {
 
   return (
     <ToastContainer toasts={toasts} onDismiss={dismissToast}>
-      <div className="min-h-screen bg-surface text-slate-100 pb-12">
+      <div className="min-h-screen bg-surface text-body pb-12">
         <Header
           role={role}
           totalUnits={grandTotals.total_units}
@@ -76,8 +76,8 @@ function AppContent() {
 
               <section className="space-y-3">
                 <div className="flex items-center justify-between px-1">
-                  <h2 className="text-sm font-bold text-slate-500 uppercase tracking-widest">Members</h2>
-                  <span className="text-xs text-slate-500 font-medium">{memberTotals.length} active</span>
+                  <h2 className="text-sm font-bold text-muted uppercase tracking-widest">Members</h2>
+                  <span className="text-xs text-muted font-medium">{memberTotals.length} active</span>
                 </div>
                 <MemberCards memberTotals={memberTotals} />
               </section>
@@ -85,7 +85,7 @@ function AppContent() {
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
                 {isEditor && (
                   <section className="lg:col-span-5 space-y-3">
-                    <h2 className="text-sm font-bold text-slate-500 uppercase tracking-widest px-1">Meter Controls</h2>
+                    <h2 className="text-sm font-bold text-muted uppercase tracking-widest px-1">Meter Controls</h2>
                     <MeterForm
                       openDayEntries={openDayEntries}
                       lastClosedDay={lastClosedDay}
