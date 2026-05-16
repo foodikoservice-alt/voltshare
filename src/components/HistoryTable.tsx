@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import type { MeterEntry, Role } from '../types/app.types';
 import { formatUnits, formatCost, formatTimestamp } from '../utils/formatters';
 import { getSplitCount, COST_PER_UNIT } from '../utils/calculations';
@@ -8,12 +8,49 @@ interface HistoryTableProps {
   entries: MeterEntry[];
   role: Role | null;
   onDelete: (id: string) => Promise<void>;
+  selectedMonth: string;
+  onMonthChange: (month: string) => void;
 }
 
-export const HistoryTable: React.FC<HistoryTableProps> = ({ entries, role, onDelete }) => {
+export const HistoryTable: React.FC<HistoryTableProps> = ({ entries, role, onDelete, selectedMonth, onMonthChange }) => {
   const isEditor = role === 'editor';
 
-  const sortedEntries = [...entries].sort((a, b) => {
+  // ── Month filter (IST-aware) ───────────────────────────────────────────────
+  /** Convert UTC ISO string to IST YYYY-MM key */
+  function toISTMonthKey(iso: string): string {
+    const d = new Date(iso);
+    d.setMinutes(d.getMinutes() + 330); // UTC+5:30
+    return d.toISOString().slice(0, 7);
+  }
+
+  const availableMonths = useMemo(() => {
+    const seen = new Set<string>();
+    const months: { key: string; label: string }[] = [];
+    [...entries]
+      .sort((a, b) => b.opening_at.localeCompare(a.opening_at))
+      .forEach(e => {
+        const key = toISTMonthKey(e.opening_at);
+        if (!seen.has(key)) {
+          seen.add(key);
+          const [y, m] = key.split('-');
+          const date = new Date(Number(y), Number(m) - 1, 1);
+          months.push({ key, label: date.toLocaleString('en-IN', { month: 'short', year: '2-digit' }) });
+        }
+      });
+    return months; // newest first
+  }, [entries]);
+
+  const latestMonth = availableMonths[0]?.key ?? '';
+  // Use the shared selectedMonth; fall back to latest month
+  const activeMonth = selectedMonth || latestMonth;
+
+  const filteredEntries = useMemo(() =>
+    activeMonth
+      ? entries.filter(e => toISTMonthKey(e.opening_at) === activeMonth)
+      : entries
+  , [entries, activeMonth]);
+
+  const sortedEntries = [...filteredEntries].sort((a, b) => {
     if (a.status === 'open' && b.status !== 'open') return -1;
     if (a.status !== 'open' && b.status === 'open') return 1;
     return 0;
@@ -37,8 +74,27 @@ export const HistoryTable: React.FC<HistoryTableProps> = ({ entries, role, onDel
       <div className="space-y-3">
       <div className="flex items-center justify-between px-1">
         <h2 className="text-sm font-bold text-muted uppercase tracking-widest">Entry History</h2>
-        <span className="text-xs text-muted font-medium">{entries.length} total</span>
+        <span className="text-xs text-muted font-medium">{sortedEntries.length} of {entries.length}</span>
       </div>
+
+      {/* Month filter pills — synced with analytics chart */}
+      {availableMonths.length > 0 && (
+        <div className="flex flex-wrap gap-2 px-1">
+          {availableMonths.map(m => (
+            <button
+              key={m.key}
+              onClick={() => onMonthChange(m.key === activeMonth && selectedMonth ? '' : m.key)}
+              className={`px-3 py-1 rounded-full text-xs font-bold transition-all border ${
+                m.key === activeMonth
+                  ? 'bg-primary text-white border-primary shadow-sm'
+                  : 'bg-surface-card text-muted border-hairline hover:border-primary/40'
+              }`}
+            >
+              {m.label}
+            </button>
+          ))}
+        </div>
+      )}
 
       <div className="glass rounded-3xl overflow-hidden">
         {/* ── Desktop table (md+) ── */}
@@ -77,7 +133,7 @@ export const HistoryTable: React.FC<HistoryTableProps> = ({ entries, role, onDel
                     <td className="px-5 py-4">
                       <div className="flex flex-wrap gap-1">
                         <span className={`badge ${entry.entry_type === 'day_shift' ? 'badge-amber' : 'badge-blue'}`}>
-                          {entry.entry_type === 'day_shift' ? 'Day Shift' : 'Night (Auto)'}
+                          {entry.entry_type === 'day_shift' ? 'Day' : 'Night'}
                         </span>
                         {entry.is_auto && (
                           <span className="badge badge-blue">Auto</span>
@@ -135,7 +191,7 @@ export const HistoryTable: React.FC<HistoryTableProps> = ({ entries, role, onDel
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex flex-wrap items-center gap-1.5">
                     <span className={`badge ${entry.entry_type === 'day_shift' ? 'badge-amber' : 'badge-blue'}`}>
-                      {entry.entry_type === 'day_shift' ? 'Day Shift' : 'Night (Auto)'}
+                      {entry.entry_type === 'day_shift' ? 'Day' : 'Night'}
                     </span>
                     {isOpen ? (
                       <span className="badge badge-amber flex items-center gap-1">

@@ -25,6 +25,7 @@ function AppContent() {
   const { toasts, show: showToast, dismiss: dismissToast } = useToast();
   const { dark, toggle: toggleDark } = useDarkMode();
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [selectedMonth, setSelectedMonth] = useState('');
 
   const grandTotals = calculateGrandTotals(entries);
   const isLoading = membersLoading || entriesLoading || totalsLoading || authLoading;
@@ -70,7 +71,11 @@ function AppContent() {
                 <SummaryBar totals={grandTotals} />
               </section>
 
-              <Charts members={members} />
+              <Charts
+                members={members}
+                selectedMonth={selectedMonth}
+                onMonthChange={setSelectedMonth}
+              />
 
               {!isEditor && <ViewOnlyNotice />}
 
@@ -113,6 +118,8 @@ function AppContent() {
                     entries={entries}
                     role={role}
                     onDelete={handleDelete}
+                    selectedMonth={selectedMonth}
+                    onMonthChange={setSelectedMonth}
                   />
                 </section>
               </div>
