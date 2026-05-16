@@ -2,31 +2,49 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import type { Member, MemberTotal } from '../types/app.types';
 import { supabase } from '../lib/supabase';
 
-export function useMemberTotals(members: Member[]) {
+export function useMemberTotals(members: Member[], selectedMonth?: string) {
   const [totals, setTotals] = useState<MemberTotal[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Keep a stable ref to members so the subscription callback always has
   // the latest value without needing to re-subscribe every time members changes.
   const membersRef = useRef<Member[]>(members);
+  const monthRef = useRef<string | undefined>(selectedMonth);
+  
   useEffect(() => {
     membersRef.current = members;
-  }, [members]);
+    monthRef.current = selectedMonth;
+  }, [members, selectedMonth]);
 
   const calculateTotals = useCallback(async () => {
     const currentMembers = membersRef.current;
     if (currentMembers.length === 0) return;
 
     try {
+      /** Convert UTC ISO string → IST (UTC+5:30) YYYY-MM key */
+      function toMonthKey(isoDate: string): string {
+        const d = new Date(isoDate);
+        d.setMinutes(d.getMinutes() + 330);
+        return d.toISOString().slice(0, 7);
+      }
+
       const { data, error } = await supabase
         .from('member_usage')
-        .select('member_id, units, cost');
+        .select('member_id, units, cost, meter_entries(opening_at)');
 
       if (error) throw error;
 
       const memberMap = new Map<string, { units: number; cost: number }>();
 
-      data?.forEach(usage => {
+      (data ?? []).forEach((usage: any) => {
+        // Filter by month if selected
+        const currentMonth = monthRef.current;
+        if (currentMonth) {
+          const entry = Array.isArray(usage.meter_entries) ? usage.meter_entries[0] : usage.meter_entries;
+          if (!entry?.opening_at) return;
+          if (toMonthKey(entry.opening_at) !== currentMonth) return;
+        }
+
         const current = memberMap.get(usage.member_id) || { units: 0, cost: 0 };
         memberMap.set(usage.member_id, {
           units: current.units + Number(usage.units),
@@ -59,12 +77,12 @@ export function useMemberTotals(members: Member[]) {
     }
   }, []); // stable — reads members via ref
 
-  // Initial load + re-fetch whenever members list first becomes available
+  // Initial load + re-fetch whenever members list or month filter changes
   useEffect(() => {
     if (members.length === 0) return;
     setLoading(true);
     calculateTotals();
-  }, [members, calculateTotals]);
+  }, [members, calculateTotals, selectedMonth]);
 
   // Realtime subscription: any change to member_usage triggers a re-fetch
   useEffect(() => {

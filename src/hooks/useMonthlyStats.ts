@@ -62,9 +62,9 @@ export function useMonthlyStats() {
         });
       });
 
-      // Sort months chronologically
+      // Sort months newest first to match history table
       const sorted = Array.from(map.entries())
-        .sort(([a], [b]) => a.localeCompare(b))
+        .sort(([a], [b]) => b.localeCompare(a))
         .map(([key, s]) => ({
           month:       key,
           label:       formatMonthLabel(key),

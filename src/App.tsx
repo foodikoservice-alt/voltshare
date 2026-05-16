@@ -21,16 +21,18 @@ function AppContent() {
   const { role, isEditor, login, logout, loading: authLoading } = useAuthContext();
   const { members, loading: membersLoading } = useMembers();
   const { entries, loading: entriesLoading, openDayEntries, lastClosedDay, addOpeningMeter, addClosingMeter, deleteEntry } = useMeterEntries(members);
-  const { totals: memberTotals, loading: totalsLoading, refresh: refreshTotals } = useMemberTotals(members);
-  const { toasts, show: showToast, dismiss: dismissToast } = useToast();
-  const { dark, toggle: toggleDark } = useDarkMode();
-  const [showLoginModal, setShowLoginModal] = useState(false);
+  
   const [selectedMonth, setSelectedMonth] = useState<string>(() => {
     // Default to current month in IST (UTC+5:30)
     const d = new Date();
     d.setMinutes(d.getMinutes() + 330);
     return d.toISOString().slice(0, 7); // "YYYY-MM"
   });
+
+  const { totals: memberTotals, loading: totalsLoading, refresh: refreshTotals } = useMemberTotals(members, selectedMonth);
+  const { toasts, show: showToast, dismiss: dismissToast } = useToast();
+  const { dark, toggle: toggleDark } = useDarkMode();
+  const [showLoginModal, setShowLoginModal] = useState(false);
 
   /** Convert a UTC ISO string to IST YYYY-MM */
   const toISTMonthKey = (iso: string) => {

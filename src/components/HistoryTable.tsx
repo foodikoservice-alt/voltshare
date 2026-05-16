@@ -227,7 +227,15 @@ export const HistoryTable: React.FC<HistoryTableProps> = ({ entries, role, onDel
                         {entry.end_meter ?? '···'}
                       </span>
                     </div>
-                    <p className="text-[9px] text-muted font-medium mt-0.5">{formatTimestamp(entry.opening_at)}</p>
+                    <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[9px] text-muted font-bold mt-1">
+                      <span>{formatTimestamp(entry.opening_at)}</span>
+                      {entry.closing_at && (
+                        <>
+                          <ArrowRight className="w-2 h-2 shrink-0 opacity-50" />
+                          <span className="text-muted-soft">{formatTimestamp(entry.closing_at)}</span>
+                        </>
+                      )}
+                    </div>
                   </div>
 
                   {/* Cost / status */}

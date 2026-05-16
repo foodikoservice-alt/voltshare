@@ -148,7 +148,7 @@ export function Charts({ members: _members, selectedMonth, onMonthChange }: Char
   if (loading || months.length === 0) return null;
 
   // Active month: use selectedMonth if valid, otherwise default to the latest month
-  const latestMonth = months[months.length - 1]?.month ?? '';
+  const latestMonth = months[0]?.month ?? '';
   const activeMonth = months.find(m => m.month === selectedMonth)?.month ?? latestMonth;
 
   // If viewing a specific month → 2 bars: Day | Night
