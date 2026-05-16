@@ -1,0 +1,177 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+@import "tailwindcss";
+
+/* ── Dark-mode variant (Tailwind v4: class-based) ── */
+@variant dark (&:where(.dark, .dark *));
+
+@theme {
+  /* Brand colours */
+  --color-primary:       #3b82f6;
+  --color-primary-dark:  #2563eb;
+  --color-primary-light: #60a5fa;
+
+  --color-secondary:       #10b981;
+  --color-secondary-dark:  #059669;
+  --color-secondary-light: #34d399;
+
+  --color-tertiary:       #f59e0b;
+  --color-tertiary-dark:  #d97706;
+  --color-tertiary-light: #fbbf24;
+
+  --color-indigo:       #6366f1;
+  --color-indigo-dark:  #4f46e5;
+  --color-indigo-light: #818cf8;
+
+  /* Surface scale (dark theme defaults) */
+  --color-surface:                    #0e131f;
+  --color-surface-dim:                #0e131f;
+  --color-surface-bright:             #343946;
+  --color-surface-container-lowest:   #080e1a;
+  --color-surface-container-low:      #161c28;
+  --color-surface-container:          #1a202c;
+  --color-surface-container-high:     #242a36;
+  --color-surface-container-highest:  #2f3542;
+  --color-surface-card:               #111827;
+  --color-surface-variant:            #2f3542;
+
+  /* Status */
+  --color-error:           #ef4444;
+  --color-error-container: #93000a;
+
+  /* Semantic text / border */
+  --color-border-muted: #1f2937;
+  --color-text-muted:   #6b7280;
+
+  /* Custom screens — xs: prefix for phones 375px+ */
+  --breakpoint-xs: 375px;
+  /* Ensure sm/md/lg/xl are standard */
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+
+  /* Keyframes */
+  @keyframes bounce-subtle {
+    0%, 100% { transform: translateY(0); }
+    50%       { transform: translateY(-4px); }
+  }
+
+  @keyframes slide-up {
+    from { transform: translateY(100%); opacity: 0; }
+    to   { transform: translateY(0);    opacity: 1; }
+  }
+
+  @keyframes fade-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+}
+
+/* ── Global resets ── */
+html {
+  scroll-behavior: smooth;
+  /* iOS safe area */
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
+body {
+  @apply bg-surface text-slate-100 font-sans;
+  font-family: 'Inter', system-ui, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+  overflow-y: scroll;
+  /* Bottom safe area for iOS home indicator */
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* ── Glassmorphism utilities ── */
+@utility glass-sm {
+  @apply bg-surface-container-low/50 backdrop-blur-sm border border-white/5;
+}
+
+@utility glass {
+  @apply bg-surface-card/80 backdrop-blur-md border border-white/10;
+}
+
+@utility glass-lg {
+  @apply bg-surface-container-highest/90 backdrop-blur-xl border border-primary/20;
+}
+
+/* ── Badge ── */
+@utility badge {
+  @apply px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider;
+}
+
+.badge-blue {
+  @apply bg-primary/20 text-primary-light border border-primary/30;
+}
+
+.badge-green {
+  @apply bg-secondary/20 text-secondary-light border border-secondary/30;
+}
+
+.badge-amber {
+  @apply bg-tertiary/20 text-tertiary-light border border-tertiary/30;
+}
+
+.badge-purple {
+  background: rgba(139,92,246,0.2);
+  border: 1px solid rgba(139,92,246,0.3);
+  color: #a78bfa;
+}
+
+/* ── Input ── */
+@utility input-field {
+  @apply w-full bg-surface-container-low border border-white/5 rounded-xl px-4 py-3 text-sm
+         focus:outline-none focus:border-primary/50 transition-all placeholder:text-text-muted
+         text-slate-100;
+  /* Prevent zoom on iOS (must be ≥ 16px effective) */
+  font-size: 16px;
+}
+
+/* ── Primary button ── */
+@utility btn-primary {
+  @apply w-full bg-primary hover:bg-primary-dark text-white font-bold py-3 rounded-xl
+         transition-all active:scale-[0.96] shadow-lg shadow-primary/20 disabled:opacity-60
+         disabled:cursor-not-allowed;
+  /* Comfortable touch target */
+  min-height: 48px;
+}
+
+/* ── Neon glow helpers ── */
+@utility neon-glow-primary {
+  @apply shadow-[0_0_15px_rgba(59,130,246,0.4)];
+}
+
+@utility neon-glow-secondary {
+  @apply shadow-[0_0_15px_rgba(16,185,129,0.4)];
+}
+
+@utility neon-glow-indigo {
+  @apply shadow-[0_0_15px_rgba(99,102,241,0.4)];
+}
+
+.neon-line-primary  { @apply stroke-primary  drop-shadow-[0_0_8px_rgba(59,130,246,0.5)]; }
+.neon-line-secondary { @apply stroke-secondary drop-shadow-[0_0_8px_rgba(16,185,129,0.5)]; }
+
+/* ── Animations ── */
+.animate-bounce-subtle {
+  animation: bounce-subtle 3s ease-in-out infinite;
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out forwards;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.25s ease-out forwards;
+}
+
+/* ── Transition helpers ── */
+.fade-enter          { opacity: 0; transform: translateY(10px); }
+.fade-enter-active   { opacity: 1; transform: translateY(0); transition: opacity 300ms, transform 300ms; }
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { @apply bg-surface-variant rounded-full; }
