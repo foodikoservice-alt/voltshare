@@ -7,6 +7,7 @@ import {
   Title,
   Tooltip,
   Legend,
+  type TooltipItem,
 } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
 import type { Member } from '../types/app.types';
@@ -232,8 +233,8 @@ export function Charts({ members: _members, selectedMonth, onMonthChange }: Char
           bodyFont:        { family: FONT, size: 11 },
           cornerRadius:    10,
           callbacks: {
-            title: (items: { label: string }[]) => items[0]?.label ?? '',
-            label: (ctx: { parsed: { y: number | null } }) => ` ${formatTooltip(ctx.parsed.y ?? 0)}`,
+            title: (items: TooltipItem<'bar'>[]) => items[0]?.label ?? '',
+            label: (ctx: TooltipItem<'bar'>) => ` ${formatTooltip(ctx.parsed.y ?? 0)}`,
           },
         },
       },
