@@ -7,7 +7,7 @@ export function ViewOnlyNotice() {
         <Eye className="w-5 h-5" />
       </div>
       <p className="text-sm font-medium">
-        View-only access — contact an editor to add or remove entries.
+        View-only Mode
       </p>
     </div>
   );
