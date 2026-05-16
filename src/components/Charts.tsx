@@ -106,9 +106,9 @@ function BarChart({ title, labels, dayValues, nightValues, stacked, formatTick, 
       tooltip: {
         ...tooltipStyle,
         callbacks: {
-          title: (items: { label: string }[]) => items[0]?.label ?? '',
-          label: (ctx: { dataset: { label: string }; parsed: { y: number | null } }) =>
-            ` ${ctx.dataset.label}: ${formatTooltip(ctx.parsed.y ?? 0)}`,
+          title: (items: TooltipItem<'bar'>[]) => items[0]?.label ?? '',
+          label: (ctx: TooltipItem<'bar'>) =>
+            ` ${ctx.dataset.label ?? ''}: ${formatTooltip(ctx.parsed.y ?? 0)}`,
         },
       },
     },
