@@ -10,11 +10,30 @@ interface AuthState {
 }
 
 export function useAuth() {
-  const [state, setState] = useState<AuthState>({
-    role: null,
-    username: null,
-    isEditor: false,
-    loading: false,
+  const [state, setState] = useState<AuthState>(() => {
+    // Try to restore session from localStorage on initial load
+    const saved = localStorage.getItem('voltshare_session');
+    if (saved) {
+      try {
+        const session = JSON.parse(saved);
+        if (session.username && session.role) {
+          return {
+            role: session.role,
+            username: session.username,
+            isEditor: session.role === 'editor',
+            loading: false,
+          };
+        }
+      } catch (e) {
+        console.error('Failed to parse saved session');
+      }
+    }
+    return {
+      role: null,
+      username: null,
+      isEditor: false,
+      loading: false,
+    };
   });
 
   const login = useCallback(async (username: string, passcode: string) => {
@@ -40,12 +59,20 @@ export function useAuth() {
 
       const role = data.role as Role;
       
-      setState({
+      const newState = {
         role,
         username,
         isEditor: role === 'editor',
         loading: false,
-      });
+      };
+
+      // Save to localStorage
+      localStorage.setItem('voltshare_session', JSON.stringify({
+        username,
+        role,
+      }));
+
+      setState(newState);
       return true;
     } catch (err) {
       console.error('Login error:', err);
@@ -55,6 +82,7 @@ export function useAuth() {
   }, []);
 
   const logout = useCallback(() => {
+    localStorage.removeItem('voltshare_session');
     setState({
       role: null,
       username: null,

@@ -40,23 +40,23 @@ interface BarChartProps {
 }
 
 function BarChart({ title, labels, dayValues, nightValues, stacked, formatTick, formatTooltip }: BarChartProps) {
-  const ink      = useCSSVar('--color-ink', '#141413');
-  const body     = useCSSVar('--color-body', '#3d3d3a');
-  const muted    = useCSSVar('--color-muted', '#6c6a64');
+  const ink = useCSSVar('--color-ink', '#141413');
+  const body = useCSSVar('--color-body', '#3d3d3a');
+  const muted = useCSSVar('--color-muted', '#6c6a64');
   const mutedSft = useCSSVar('--color-muted-soft', '#8e8b82');
-  const surface  = useCSSVar('--color-surface-card', '#efe9de');
-  const primary  = useCSSVar('--color-primary', '#cc785c');
+  const surface = useCSSVar('--color-surface-card', '#efe9de');
+  const primary = useCSSVar('--color-primary', '#cc785c');
 
   const tooltipStyle = {
     backgroundColor: surface + 'f0',
-    borderColor:     primary + '40',
-    borderWidth:     1,
-    padding:         12,
-    titleColor:      ink,
-    bodyColor:       body,
-    titleFont:       { family: FONT, size: 12, weight: 'bold' as const },
-    bodyFont:        { family: FONT, size: 11 },
-    cornerRadius:    10,
+    borderColor: primary + '40',
+    borderWidth: 1,
+    padding: 12,
+    titleColor: ink,
+    bodyColor: body,
+    titleFont: { family: FONT, size: 12, weight: 'bold' as const },
+    bodyFont: { family: FONT, size: 11 },
+    cornerRadius: 10,
   };
 
   const radius = labels.length > 2 ? 4 : 10;
@@ -65,44 +65,34 @@ function BarChart({ title, labels, dayValues, nightValues, stacked, formatTick, 
     labels,
     datasets: [
       {
-        label:           'Day',
-        data:            dayValues,
+        label: 'Day',
+        data: dayValues,
         backgroundColor: 'rgba(251,191,36,0.85)',
-        borderColor:     '#fbbf24',
-        borderWidth:     2,
-        borderRadius:    radius,
-        borderSkipped:   false,
-        stack:           stacked ? 'shift' : undefined,
+        borderColor: '#fbbf24',
+        borderWidth: 2,
+        borderRadius: radius,
+        borderSkipped: false,
+        stack: stacked ? 'shift' : undefined,
       },
       {
-        label:           'Night',
-        data:            nightValues,
+        label: 'Night',
+        data: nightValues,
         backgroundColor: 'rgba(6,182,212,0.85)',
-        borderColor:     '#06b6d4',
-        borderWidth:     2,
-        borderRadius:    radius,
-        borderSkipped:   false,
-        stack:           stacked ? 'shift' : undefined,
+        borderColor: '#06b6d4',
+        borderWidth: 2,
+        borderRadius: radius,
+        borderSkipped: false,
+        stack: stacked ? 'shift' : undefined,
       },
     ],
   };
 
   const options = {
-    responsive:          true,
+    responsive: true,
     maintainAspectRatio: false,
     plugins: {
       legend: {
-        display:  true,
-        position: 'top' as const,
-        labels: {
-          color:           muted,
-          font:            { family: FONT, size: 11, weight: 'bold' as const },
-          boxWidth:        12,
-          boxHeight:       12,
-          borderRadius:    4,
-          padding:         16,
-          useBorderRadius: true,
-        },
+        display: false,
       },
       tooltip: {
         ...tooltipStyle,
@@ -116,17 +106,17 @@ function BarChart({ title, labels, dayValues, nightValues, stacked, formatTick, 
     scales: {
       x: {
         stacked: stacked,
-        grid:    { display: false },
-        border:  { display: false },
-        ticks:   { color: muted, font: { family: FONT, size: 12, weight: 'bold' as const } },
+        grid: { display: false },
+        border: { display: false },
+        ticks: { color: muted, font: { family: FONT, size: 12, weight: 'bold' as const } },
       },
       y: {
         stacked: stacked,
-        grid:    { color: ink + '10' },
-        border:  { display: false },
-        ticks:   {
-          color:    mutedSft,
-          font:     { family: FONT, size: 10 },
+        grid: { color: ink + '10' },
+        border: { display: false },
+        ticks: {
+          color: mutedSft,
+          font: { family: FONT, size: 10 },
           callback: (v: number | string) => formatTick(v),
         },
       },
@@ -167,11 +157,11 @@ export function Charts({ members: _members, selectedMonth, onMonthChange }: Char
 
   const single = months.find(m => m.month === activeMonth);
 
-  const labels     = isSingleMonth
-    ? ['Day', 'Night']
-    : months.map(m => m.label);
+  const labels = isSingleMonth
+    ? [`Day ${single?.day_units.toFixed(1)}u`, `Night ${single?.night_units.toFixed(1)}u`]
+    : months.map(m => `${m.label} (${(m.day_units + m.night_units).toFixed(1)}u)`);
 
-  const dayUnits   = isSingleMonth ? [single?.day_units  ?? 0] : months.map(m => m.day_units);
+  const dayUnits = isSingleMonth ? [single?.day_units ?? 0] : months.map(m => m.day_units);
   const nightUnits = isSingleMonth ? [single?.night_units ?? 0] : months.map(m => m.night_units);
 
   // For single-month view: two separate bars (Day, Night) — not stacked
@@ -180,16 +170,16 @@ export function Charts({ members: _members, selectedMonth, onMonthChange }: Char
 
   // For single month, render as two separate simple bars (one dataset each)
   const singleMonthUnitsData = {
-    labels: ['Day', 'Night'],
+    labels: [`Day ${single?.day_units.toFixed(1)}u`, `Night ${single?.night_units.toFixed(1)}u`],
     datasets: [
       {
-        label:           'Units (kWh)',
-        data:            [single?.day_units ?? 0, single?.night_units ?? 0],
+        label: 'Units (kWh)',
+        data: [single?.day_units ?? 0, single?.night_units ?? 0],
         backgroundColor: ['rgba(251,191,36,0.85)', 'rgba(6,182,212,0.85)'],
-        borderColor:     ['#fbbf24', '#06b6d4'],
-        borderWidth:     2,
-        borderRadius:    10,
-        borderSkipped:   false as const,
+        borderColor: ['#fbbf24', '#06b6d4'],
+        borderWidth: 2,
+        borderRadius: 10,
+        borderSkipped: false as const,
       },
     ],
   };
@@ -197,27 +187,27 @@ export function Charts({ members: _members, selectedMonth, onMonthChange }: Char
 
 
   const makeOptions = (formatTick: (v: number | string) => string, formatTooltip: (v: number) => string) => {
-    const ink      = getComputedStyle(document.documentElement).getPropertyValue('--color-ink').trim()      || '#141413';
-    const muted    = getComputedStyle(document.documentElement).getPropertyValue('--color-muted').trim()    || '#6c6a64';
-    const mutedSft = getComputedStyle(document.documentElement).getPropertyValue('--color-muted-soft').trim()|| '#8e8b82';
-    const surface  = getComputedStyle(document.documentElement).getPropertyValue('--color-surface-card').trim()|| '#efe9de';
-    const primary  = getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim()  || '#cc785c';
-    const body     = getComputedStyle(document.documentElement).getPropertyValue('--color-body').trim()     || '#3d3d3a';
+    const ink = getComputedStyle(document.documentElement).getPropertyValue('--color-ink').trim() || '#141413';
+    const muted = getComputedStyle(document.documentElement).getPropertyValue('--color-muted').trim() || '#6c6a64';
+    const mutedSft = getComputedStyle(document.documentElement).getPropertyValue('--color-muted-soft').trim() || '#8e8b82';
+    const surface = getComputedStyle(document.documentElement).getPropertyValue('--color-surface-card').trim() || '#efe9de';
+    const primary = getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim() || '#cc785c';
+    const body = getComputedStyle(document.documentElement).getPropertyValue('--color-body').trim() || '#3d3d3a';
     return {
-      responsive:          true,
+      responsive: true,
       maintainAspectRatio: false,
       plugins: {
         legend: { display: false },
         tooltip: {
           backgroundColor: surface + 'f0',
-          borderColor:     primary + '40',
-          borderWidth:     1,
-          padding:         12,
-          titleColor:      ink,
-          bodyColor:       body,
-          titleFont:       { family: FONT, size: 12, weight: 'bold' as const },
-          bodyFont:        { family: FONT, size: 11 },
-          cornerRadius:    10,
+          borderColor: primary + '40',
+          borderWidth: 1,
+          padding: 12,
+          titleColor: ink,
+          bodyColor: body,
+          titleFont: { family: FONT, size: 12, weight: 'bold' as const },
+          bodyFont: { family: FONT, size: 11 },
+          cornerRadius: 10,
           callbacks: {
             title: (items: TooltipItem<'bar'>[]) => items[0]?.label ?? '',
             label: (ctx: TooltipItem<'bar'>) => ` ${formatTooltip(ctx.parsed.y ?? 0)}`,
@@ -233,65 +223,65 @@ export function Charts({ members: _members, selectedMonth, onMonthChange }: Char
 
   // ─── Donut chart for cost (Day vs Night) ───────────────────────────────────
   const CostDonut = ({ dayCost, nightCost }: { dayCost: number; nightCost: number }) => {
-    const surface  = getComputedStyle(document.documentElement).getPropertyValue('--color-surface-card').trim() || '#efe9de';
-    const primary  = getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim()      || '#cc785c';
-    const ink      = getComputedStyle(document.documentElement).getPropertyValue('--color-ink').trim()          || '#141413';
-    const body     = getComputedStyle(document.documentElement).getPropertyValue('--color-body').trim()         || '#3d3d3a';
-    const muted    = getComputedStyle(document.documentElement).getPropertyValue('--color-muted').trim()        || '#6c6a64';
-    const total    = dayCost + nightCost;
+    const surface = getComputedStyle(document.documentElement).getPropertyValue('--color-surface-card').trim() || '#efe9de';
+    const primary = getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim() || '#cc785c';
+    const ink = getComputedStyle(document.documentElement).getPropertyValue('--color-ink').trim() || '#141413';
+    const body = getComputedStyle(document.documentElement).getPropertyValue('--color-body').trim() || '#3d3d3a';
+    const muted = getComputedStyle(document.documentElement).getPropertyValue('--color-muted').trim() || '#6c6a64';
+    const total = dayCost + nightCost;
 
     const donutData = {
       labels: ['Day', 'Night'],
       datasets: [{
-        data:            [dayCost, nightCost],
+        data: [dayCost, nightCost],
         backgroundColor: ['rgba(251,191,36,0.85)', 'rgba(6,182,212,0.85)'],
-        borderColor:     ['#fbbf24', '#06b6d4'],
-        borderWidth:     2,
-        hoverOffset:     6,
+        borderColor: ['#fbbf24', '#06b6d4'],
+        borderWidth: 2,
+        hoverOffset: 6,
       }],
     };
 
     const donutOptions = {
-      responsive:          true,
+      responsive: true,
       maintainAspectRatio: false,
-      cutout:              '68%',
+      cutout: '68%',
       plugins: {
         legend: {
-          display:  true,
+          display: true,
           position: 'bottom' as const,
           labels: {
-            color:           muted,
-            font:            { family: FONT, size: 11, weight: 'bold' as const },
-            boxWidth:        12,
-            boxHeight:       12,
-            borderRadius:    4,
-            padding:         16,
+            color: muted,
+            font: { family: FONT, size: 11, weight: 'bold' as const },
+            boxWidth: 12,
+            boxHeight: 12,
+            borderRadius: 4,
+            padding: 16,
             useBorderRadius: true,
             generateLabels: (chart: ChartJS) => {
               const ds = chart.data.datasets[0];
               return (chart.data.labels as string[]).map((label, i) => ({
-                text:            `${label}  ₹${(ds.data[i] as number).toFixed(2)}`,
-                fillStyle:       (ds.backgroundColor as string[])[i],
-                strokeStyle:     (ds.borderColor as string[])[i],
-                lineWidth:       2,
-                hidden:          false,
-                index:           i,
-                datasetIndex:    0,
-                fontColor:       muted,
+                text: `${label}  ₹${(ds.data[i] as number).toFixed(2)}`,
+                fillStyle: (ds.backgroundColor as string[])[i],
+                strokeStyle: (ds.borderColor as string[])[i],
+                lineWidth: 2,
+                hidden: false,
+                index: i,
+                datasetIndex: 0,
+                fontColor: muted,
               }));
             },
           },
         },
         tooltip: {
           backgroundColor: surface + 'f0',
-          borderColor:     primary + '40',
-          borderWidth:     1,
-          padding:         12,
-          titleColor:      ink,
-          bodyColor:       body,
-          titleFont:       { family: FONT, size: 12, weight: 'bold' as const },
-          bodyFont:        { family: FONT, size: 11 },
-          cornerRadius:    10,
+          borderColor: primary + '40',
+          borderWidth: 1,
+          padding: 12,
+          titleColor: ink,
+          bodyColor: body,
+          titleFont: { family: FONT, size: 12, weight: 'bold' as const },
+          bodyFont: { family: FONT, size: 11 },
+          cornerRadius: 10,
           callbacks: {
             label: (ctx: TooltipItem<'doughnut'>) =>
               `  ₹${(ctx.parsed as number).toFixed(2)} (${total > 0 ? ((ctx.parsed as number / total) * 100).toFixed(1) : 0}%)`,
@@ -302,7 +292,7 @@ export function Charts({ members: _members, selectedMonth, onMonthChange }: Char
 
     return (
       <div className="rounded-2xl border border-hairline bg-surface-card p-4 sm:p-6 space-y-3">
-        <h3 className="text-xs font-black text-muted uppercase tracking-widest">Cost (₹) — Day vs Night</h3>
+        <h3 className="text-xs font-black text-muted uppercase tracking-widest">Cost (₹)</h3>
         <div className="relative" style={{ height: 240 }}>
           <Doughnut data={donutData} options={donutOptions} />
           {/* Centred total label */}
@@ -330,11 +320,10 @@ export function Charts({ members: _members, selectedMonth, onMonthChange }: Char
           <button
             key={m.month}
             onClick={() => onMonthChange(m.month === activeMonth && selectedMonth ? '' : m.month)}
-            className={`px-3 py-1 rounded-full text-xs font-bold transition-all border ${
-              m.month === activeMonth
+            className={`px-3 py-1 rounded-full text-xs font-bold transition-all border ${m.month === activeMonth
                 ? 'bg-primary text-white border-primary shadow-sm'
                 : 'bg-surface-card text-muted border-hairline hover:border-primary/40'
-            }`}
+              }`}
           >
             {m.label}
           </button>
