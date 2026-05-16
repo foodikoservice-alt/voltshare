@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { AuthProvider, useAuthContext } from './context/AuthContext';
 import { useMembers } from './hooks/useMembers';
 import { useMeterEntries } from './hooks/useMeterEntries';
@@ -10,7 +11,7 @@ import { SummaryBar } from './components/SummaryBar';
 import { MemberCards } from './components/MemberCards';
 import { MeterForm } from './components/MeterForm';
 import { HistoryTable } from './components/HistoryTable';
-import { LoginScreen } from './components/LoginScreen';
+import { LoginModal } from './components/LoginModal';
 import { ViewOnlyNotice } from './components/ViewOnlyNotice';
 import { ToastContainer } from './components/Toast';
 import { LoadingSpinner } from './components/LoadingSpinner';
@@ -22,21 +23,24 @@ function AppContent() {
   const { totals: memberTotals, loading: totalsLoading, refresh: refreshTotals } = useMemberTotals(members);
   const { toasts, show: showToast, dismiss: dismissToast } = useToast();
   const { dark, toggle: toggleDark } = useDarkMode();
-
-  if (authLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-surface">
-        <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
-
-  if (!role) {
-    return <LoginScreen onLogin={login} />;
-  }
+  const [showLoginModal, setShowLoginModal] = useState(false);
 
   const grandTotals = calculateGrandTotals(entries);
-  const isLoading = membersLoading || entriesLoading || totalsLoading;
+  const isLoading = membersLoading || entriesLoading || totalsLoading || authLoading;
+
+  const handleLogin = async (username: string, passcode: string) => {
+    const success = await login(username, passcode);
+    if (success) {
+      setShowLoginModal(false);
+      showToast('Signed in as editor', 'success');
+    }
+    return success;
+  };
+
+  const handleLogout = () => {
+    logout();
+    showToast('Signed out', 'success');
+  };
 
   const handleDelete = async (id: string) => {
     await deleteEntry(id);
@@ -52,7 +56,8 @@ function AppContent() {
           totalCost={grandTotals.total_cost}
           dark={dark}
           onToggleDark={toggleDark}
-          onLogout={logout}
+          onLogout={handleLogout}
+          onEditorLogin={() => setShowLoginModal(true)}
         />
 
         <main className="max-w-6xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8 space-y-5 sm:space-y-6">
@@ -115,6 +120,13 @@ function AppContent() {
         <div className="fixed top-[-10%] right-[-10%] w-[600px] h-[600px] bg-primary/10 rounded-full blur-[150px] pointer-events-none -z-10" />
         <div className="fixed bottom-[-10%] left-[-10%] w-[600px] h-[600px] bg-secondary/10 rounded-full blur-[150px] pointer-events-none -z-10" />
       </div>
+
+      {showLoginModal && (
+        <LoginModal
+          onLogin={handleLogin}
+          onClose={() => setShowLoginModal(false)}
+        />
+      )}
     </ToastContainer>
   );
 }
