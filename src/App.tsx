@@ -70,7 +70,7 @@ function AppContent() {
                 <SummaryBar totals={grandTotals} />
               </section>
 
-              <Charts entries={entries} memberTotals={memberTotals} />
+              <Charts members={members} />
 
               {!isEditor && <ViewOnlyNotice />}
 
