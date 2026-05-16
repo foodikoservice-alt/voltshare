@@ -13,6 +13,7 @@ import { MeterForm } from './components/MeterForm';
 import { HistoryTable } from './components/HistoryTable';
 import { LoginModal } from './components/LoginModal';
 import { ViewOnlyNotice } from './components/ViewOnlyNotice';
+import { Charts } from './components/Charts';
 import { ToastContainer } from './components/Toast';
 import { LoadingSpinner } from './components/LoadingSpinner';
 
@@ -68,6 +69,8 @@ function AppContent() {
               <section>
                 <SummaryBar totals={grandTotals} />
               </section>
+
+              <Charts entries={entries} memberTotals={memberTotals} />
 
               {!isEditor && <ViewOnlyNotice />}
 
