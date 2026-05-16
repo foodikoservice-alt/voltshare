@@ -27,7 +27,6 @@ export const MeterForm: React.FC<MeterFormProps> = ({
 
   const [openingMeter, setOpeningMeter] = useState('');
   const [isWeekend, setIsWeekend] = useState(false);
-  const [notes, setNotes] = useState('');
 
   const [selectedEntryId, setSelectedEntryId] = useState('');
   const [closingMeter, setClosingMeter] = useState('');
@@ -41,7 +40,7 @@ export const MeterForm: React.FC<MeterFormProps> = ({
 
   const handleOpeningSubmit = async () => {
     clearForm();
-    const data: OpeningMeterFormData = { opening_meter: openingMeter, is_weekend: isWeekend, notes };
+    const data: OpeningMeterFormData = { opening_meter: openingMeter, is_weekend: isWeekend, notes: '' };
     const validation = validateOpeningMeter(data);
     if (validation.length > 0) {
       const errMap: Record<string, string> = {};
@@ -55,7 +54,6 @@ export const MeterForm: React.FC<MeterFormProps> = ({
       await onAddOpeningMeter(data);
       setOpeningMeter('');
       setIsWeekend(false);
-      setNotes('');
       setErrors({});
     } catch (err) {
       console.error(err);
@@ -167,18 +165,6 @@ export const MeterForm: React.FC<MeterFormProps> = ({
             />
           )}
 
-          <div className="space-y-1.5">
-            <label className="text-[10px] font-bold text-muted uppercase tracking-widest ml-1">
-              Notes (Optional)
-            </label>
-            <textarea
-              placeholder="e.g. Initial reading for the day"
-              value={notes}
-              onChange={e => setNotes(e.target.value)}
-              className="input-field resize-none"
-              rows={2}
-            />
-          </div>
 
           <button
             onClick={handleOpeningSubmit}
