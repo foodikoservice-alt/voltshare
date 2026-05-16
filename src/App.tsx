@@ -25,7 +25,12 @@ function AppContent() {
   const { toasts, show: showToast, dismiss: dismissToast } = useToast();
   const { dark, toggle: toggleDark } = useDarkMode();
   const [showLoginModal, setShowLoginModal] = useState(false);
-  const [selectedMonth, setSelectedMonth] = useState('');
+  const [selectedMonth, setSelectedMonth] = useState<string>(() => {
+    // Default to current month in IST (UTC+5:30)
+    const d = new Date();
+    d.setMinutes(d.getMinutes() + 330);
+    return d.toISOString().slice(0, 7); // "YYYY-MM"
+  });
 
   const grandTotals = calculateGrandTotals(entries);
   const isLoading = membersLoading || entriesLoading || totalsLoading || authLoading;
