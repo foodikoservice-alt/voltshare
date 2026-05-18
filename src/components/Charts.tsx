@@ -189,12 +189,14 @@ const CostDonut = ({ dayCost, nightCost, displayTotal }: { dayCost: number; nigh
         titleColor: ink,
         bodyColor: body,
         titleFont: { family: FONT, size: 12, weight: 'bold' as const },
-        bodyFont: { family: FONT, size: 11 },
+        bodyFont: { family: FONT, size: 11, weight: 'bold' as const },
         cornerRadius: 10,
         callbacks: {
+          title: (ctx: TooltipItem<'doughnut'>[]) => ctx[0].label || '',
           label: (ctx: TooltipItem<'doughnut'>) => {
             const sliceSum = dayCost + nightCost;
-            return `  ₹${(ctx.parsed as number).toFixed(2)} (${sliceSum > 0 ? ((ctx.parsed as number / sliceSum) * 100).toFixed(1) : 0}%)`;
+            const percent = sliceSum > 0 ? ((ctx.parsed as number / sliceSum) * 100).toFixed(1) : '0';
+            return ` Cost: ₹${(ctx.parsed as number).toFixed(2)} (${percent}%)`;
           }
         },
       },
@@ -205,11 +207,13 @@ const CostDonut = ({ dayCost, nightCost, displayTotal }: { dayCost: number; nigh
     <div className="rounded-2xl border border-hairline bg-surface-card p-4 sm:p-6 space-y-3">
       <h3 className="text-xs font-black text-muted uppercase tracking-widest">Cost (₹)</h3>
       <div className="relative" style={{ height: 240 }}>
-        <Doughnut data={donutData} options={donutOptions} />
-        {/* Centred total label */}
-        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none" style={{ paddingBottom: '2.5rem' }}>
+        {/* Centred total label (z-0 so tooltip renders on top of it) */}
+        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-0" style={{ paddingBottom: '2.5rem' }}>
           <span className="text-[10px] font-bold text-muted uppercase tracking-widest">Total</span>
           <span className="text-lg font-black text-ink">₹{total.toFixed(2)}</span>
+        </div>
+        <div className="relative z-10 h-full w-full">
+          <Doughnut data={donutData} options={donutOptions} />
         </div>
       </div>
     </div>
