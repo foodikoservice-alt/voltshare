@@ -98,7 +98,7 @@ export function useMeterEntries(members: Member[]) {
         if (nightErr) throw nightErr;
 
         const nightRows = buildMemberUsageRows(
-          { id: nightEntry.id, usage_units: units, entry_type: 'night_shift', is_weekend: formData.is_weekend },
+          { id: nightEntry.id, usage_units: units, entry_type: 'night_shift', is_weekend: formData.is_weekend, rate_per_unit: rate },
           members
         );
         const { error: usageErr } = await supabase.from('member_usage').insert(nightRows);
@@ -146,7 +146,7 @@ export function useMeterEntries(members: Member[]) {
     if (error) throw error;
 
     const rows = buildMemberUsageRows(
-      { id: closed.id, usage_units, entry_type: 'day_shift', is_weekend: closed.is_weekend },
+      { id: closed.id, usage_units, entry_type: 'day_shift', is_weekend: closed.is_weekend, rate_per_unit: closed.rate_per_unit },
       members
     );
     await supabase.from('member_usage').insert(rows);

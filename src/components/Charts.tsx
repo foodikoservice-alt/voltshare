@@ -34,12 +34,11 @@ interface BarChartProps {
   labels: string[];
   dayValues: number[];
   nightValues: number[];
-  stacked: boolean;
   formatTick: (v: number | string) => string;
   formatTooltip: (v: number) => string;
 }
 
-function BarChart({ title, labels, dayValues, nightValues, stacked, formatTick, formatTooltip }: BarChartProps) {
+function BarChart({ title, labels, dayValues, nightValues, formatTick, formatTooltip }: BarChartProps) {
   const ink = useCSSVar('--color-ink', '#141413');
   const body = useCSSVar('--color-body', '#3d3d3a');
   const muted = useCSSVar('--color-muted', '#6c6a64');
@@ -72,7 +71,6 @@ function BarChart({ title, labels, dayValues, nightValues, stacked, formatTick, 
         borderWidth: 2,
         borderRadius: radius,
         borderSkipped: false,
-        stack: stacked ? 'shift' : undefined,
       },
       {
         label: 'Night',
@@ -82,7 +80,6 @@ function BarChart({ title, labels, dayValues, nightValues, stacked, formatTick, 
         borderWidth: 2,
         borderRadius: radius,
         borderSkipped: false,
-        stack: stacked ? 'shift' : undefined,
       },
     ],
   };
@@ -105,13 +102,11 @@ function BarChart({ title, labels, dayValues, nightValues, stacked, formatTick, 
     },
     scales: {
       x: {
-        stacked: stacked,
         grid: { display: false },
         border: { display: false },
         ticks: { color: muted, font: { family: FONT, size: 12, weight: 'bold' as const } },
       },
       y: {
-        stacked: stacked,
         grid: { color: ink + '10' },
         border: { display: false },
         ticks: {
@@ -136,13 +131,13 @@ function BarChart({ title, labels, dayValues, nightValues, stacked, formatTick, 
 // ─── Main Export ──────────────────────────────────────────────────────────────
 
 // ─── Donut chart for cost (Day vs Night) ───────────────────────────────────
-const CostDonut = ({ dayCost, nightCost }: { dayCost: number; nightCost: number }) => {
+const CostDonut = ({ dayCost, nightCost, displayTotal }: { dayCost: number; nightCost: number; displayTotal?: number }) => {
   const surface = useCSSVar('--color-surface-card', '#efe9de');
   const primary = useCSSVar('--color-primary', '#cc785c');
   const ink = useCSSVar('--color-ink', '#141413');
   const body = useCSSVar('--color-body', '#3d3d3a');
   const muted = useCSSVar('--color-muted', '#6c6a64');
-  const total = dayCost + nightCost;
+  const total = displayTotal ?? (dayCost + nightCost);
 
   const donutData = {
     labels: ['Day', 'Night'],
@@ -197,8 +192,10 @@ const CostDonut = ({ dayCost, nightCost }: { dayCost: number; nightCost: number 
         bodyFont: { family: FONT, size: 11 },
         cornerRadius: 10,
         callbacks: {
-          label: (ctx: TooltipItem<'doughnut'>) =>
-            `  ₹${(ctx.parsed as number).toFixed(2)} (${total > 0 ? ((ctx.parsed as number / total) * 100).toFixed(1) : 0}%)`,
+          label: (ctx: TooltipItem<'doughnut'>) => {
+            const sliceSum = dayCost + nightCost;
+            return `  ₹${(ctx.parsed as number).toFixed(2)} (${sliceSum > 0 ? ((ctx.parsed as number / sliceSum) * 100).toFixed(1) : 0}%)`;
+          }
         },
       },
     },
@@ -250,11 +247,13 @@ export function Charts({ members: _members, selectedMonth, onMonthChange }: Char
 
   // For single-month view: two separate bars (Day, Night) — not stacked
   // For all-months view: stacked monthly bars
-  const stacked = !isSingleMonth;
-
-  // For single month, render as two separate simple bars (one dataset each)
+  
+  // For single month, render as three separate simple bars (one dataset)
   const singleMonthUnitsData = {
-    labels: [`Day ${single?.day_units.toFixed(1)}u`, `Night ${single?.night_units.toFixed(1)}u`],
+    labels: [
+      `Day ${single?.day_units.toFixed(1)}u`,
+      `Night ${single?.night_units.toFixed(1)}u`
+    ],
     datasets: [
       {
         label: 'Units (kWh)',
@@ -342,6 +341,7 @@ export function Charts({ members: _members, selectedMonth, onMonthChange }: Char
             <CostDonut
               dayCost={single?.day_cost ?? 0}
               nightCost={single?.night_cost ?? 0}
+              displayTotal={(single?.building_day_cost ?? 0) + (single?.building_night_cost ?? 0)}
             />
           </>
         ) : (
@@ -351,13 +351,13 @@ export function Charts({ members: _members, selectedMonth, onMonthChange }: Char
               labels={labels}
               dayValues={dayUnits}
               nightValues={nightUnits}
-              stacked={stacked}
               formatTick={v => `${v}u`}
               formatTooltip={v => `${v.toFixed(1)} kWh`}
             />
             <CostDonut
               dayCost={months.reduce((s, m) => s + m.day_cost, 0)}
               nightCost={months.reduce((s, m) => s + m.night_cost, 0)}
+              displayTotal={months.reduce((s, m) => s + m.building_day_cost + m.building_night_cost, 0)}
             />
           </>
         )}

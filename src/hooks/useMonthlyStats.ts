@@ -10,6 +10,8 @@ export interface MonthlyStats {
   day_cost: number;
   night_cost: number;
   total_cost: number;
+  building_day_cost: number;
+  building_night_cost: number;
 }
 
 /** Convert a UTC ISO string → IST (UTC+5:30) YYYY-MM key */
@@ -33,48 +35,84 @@ export function useMonthlyStats() {
     try {
       const { data, error } = await supabase
         .from('member_usage')
-        .select('units, cost, meter_entries(entry_type, opening_at)');
+        .select('units, cost, member_id, meter_entries(entry_type, opening_at), members(shift_type)');
 
       if (error) throw error;
 
-      const map = new Map<string, { day_u: number; night_u: number; day_c: number; night_c: number }>();
+      // Map to store per-member totals per month
+      const monthMemberTotals = new Map<string, {
+        dayUnits: Map<string, number>,
+        nightUnits: Map<string, number>,
+        dayCost: Map<string, number>,
+        nightCost: Map<string, number>,
+        b_day_c: number,
+        b_night_c: number,
+      }>();
 
-      (data ?? []).forEach((row: {
-        units: number;
-        cost: number;
-        meter_entries: { entry_type: string; opening_at: string } | { entry_type: string; opening_at: string }[] | null;
-      }) => {
-        const entry = Array.isArray(row.meter_entries)
-          ? row.meter_entries[0]
-          : row.meter_entries;
+      (data ?? []).forEach((row: { cost: string | number; units: string | number; member_id: string; meter_entries: unknown; members: unknown; }) => {
+        const entry = Array.isArray(row.meter_entries) ? (row.meter_entries as Record<string, unknown>[])[0] : (row.meter_entries as Record<string, unknown>);
+        const member = Array.isArray(row.members) ? (row.members as Record<string, unknown>[])[0] : (row.members as Record<string, unknown>);
+        if (!entry?.opening_at || !member) return;
 
-        if (!entry?.opening_at) return;
+        const key = toMonthKey(entry.opening_at as string);
+        if (!monthMemberTotals.has(key)) {
+          monthMemberTotals.set(key, {
+            dayUnits: new Map(),
+            nightUnits: new Map(),
+            dayCost: new Map(),
+            nightCost: new Map(),
+            b_day_c: 0,
+            b_night_c: 0,
+          });
+        }
+        const monthStats = monthMemberTotals.get(key)!;
 
-        const key = toMonthKey(entry.opening_at);
-        const cur = map.get(key) ?? { day_u: 0, night_u: 0, day_c: 0, night_c: 0 };
-        const isDay = entry.entry_type === 'day_shift';
+        // Building totals based on entry type
+        const isDayShift = entry.entry_type === 'day_shift';
+        if (isDayShift) {
+          monthStats.b_day_c += Number(row.cost);
+        } else {
+          monthStats.b_night_c += Number(row.cost);
+        }
 
-        map.set(key, {
-          day_u:   cur.day_u   + (isDay ? Number(row.units) : 0),
-          night_u: cur.night_u + (isDay ? 0 : Number(row.units)),
-          day_c:   cur.day_c   + (isDay ? Number(row.cost)  : 0),
-          night_c: cur.night_c + (isDay ? 0 : Number(row.cost)),
-        });
+        // Per-person totals based on member's shift type
+        const isDayMember = member.shift_type === 'day';
+        const unitsMap = isDayMember ? monthStats.dayUnits : monthStats.nightUnits;
+        const costMap = isDayMember ? monthStats.dayCost : monthStats.nightCost;
+
+        unitsMap.set(row.member_id, (unitsMap.get(row.member_id) ?? 0) + Number(row.units));
+        costMap.set(row.member_id, (costMap.get(row.member_id) ?? 0) + Number(row.cost));
       });
 
+      const getAvg = (map: Map<string, number>) => {
+        if (map.size === 0) return 0;
+        let sum = 0;
+        for (const val of map.values()) sum += val;
+        return sum / map.size;
+      };
+
       // Sort months newest first to match history table
-      const sorted = Array.from(map.entries())
+      const sorted = Array.from(monthMemberTotals.entries())
         .sort(([a], [b]) => b.localeCompare(a))
-        .map(([key, s]) => ({
-          month:       key,
-          label:       formatMonthLabel(key),
-          day_units:   parseFloat(s.day_u.toFixed(1)),
-          night_units: parseFloat(s.night_u.toFixed(1)),
-          total_units: parseFloat((s.day_u + s.night_u).toFixed(1)),
-          day_cost:    parseFloat(s.day_c.toFixed(2)),
-          night_cost:  parseFloat(s.night_c.toFixed(2)),
-          total_cost:  parseFloat((s.day_c + s.night_c).toFixed(2)),
-        }));
+        .map(([key, stats]) => {
+          const avgDayUnits = getAvg(stats.dayUnits);
+          const avgNightUnits = getAvg(stats.nightUnits);
+          const avgDayCost = getAvg(stats.dayCost);
+          const avgNightCost = getAvg(stats.nightCost);
+
+          return {
+            month:       key,
+            label:       formatMonthLabel(key),
+            day_units:   parseFloat(avgDayUnits.toFixed(1)),
+            night_units: parseFloat(avgNightUnits.toFixed(1)),
+            total_units: parseFloat((avgDayUnits + avgNightUnits).toFixed(1)),
+            day_cost:    parseFloat(avgDayCost.toFixed(2)),
+            night_cost:  parseFloat(avgNightCost.toFixed(2)),
+            total_cost:  parseFloat((avgDayCost + avgNightCost).toFixed(2)),
+            building_day_cost: parseFloat(stats.b_day_c.toFixed(2)),
+            building_night_cost: parseFloat(stats.b_night_c.toFixed(2)),
+          };
+        });
 
       setMonths(sorted);
     } catch (err) {

@@ -20,7 +20,7 @@ export function calculateCost(units: number, rate: number = DEFAULT_COST_PER_UNI
 }
 
 export function buildMemberUsageRows(
-  entry: { id: string; usage_units: number; entry_type: EntryType; is_weekend: boolean },
+  entry: { id: string; usage_units: number; entry_type: EntryType; is_weekend: boolean, rate_per_unit?: number | null },
   members: Member[]
 ) {
   let eligible: Member[];
@@ -34,10 +34,13 @@ export function buildMemberUsageRows(
   }
 
   const perPerson = calculatePerPerson(entry.usage_units, entry.entry_type, entry.is_weekend);
+  const cost = calculateCost(perPerson, entry.rate_per_unit || DEFAULT_COST_PER_UNIT);
+
   return eligible.map(m => ({
     member_id: m.id,
     meter_entry_id: entry.id,
     units: perPerson,
+    cost: cost,
     usage_month: getISTMonthKey(new Date().toISOString())
   }));
 }
@@ -49,16 +52,24 @@ export function getISTMonthKey(isoDate: string): string {
   return d.toISOString().slice(0, 7);
 }
 
-export function calculateGrandTotals(entries: MeterEntry[], rate: number = DEFAULT_COST_PER_UNIT): GrandTotals {
+export function calculateGrandTotals(entries: MeterEntry[], defaultRate: number = DEFAULT_COST_PER_UNIT): GrandTotals {
   const closed    = entries.filter(e => e.status === 'closed');
   const open      = entries.filter(e => e.status === 'open');
   const nightAuto = entries.filter(e => e.is_auto);
-  const total_units = parseFloat(
-    closed.reduce((s, e) => s + (e.usage_units ?? 0), 0).toFixed(1)
-  );
+  
+  let total_units = 0;
+  let total_cost = 0;
+  
+  closed.forEach(e => {
+    const units = e.usage_units ?? 0;
+    const rate = e.rate_per_unit || defaultRate;
+    total_units += units;
+    total_cost += units * rate;
+  });
+
   return {
-    total_units,
-    total_cost: parseFloat((total_units * rate).toFixed(2)),
+    total_units: parseFloat(total_units.toFixed(1)),
+    total_cost: parseFloat(total_cost.toFixed(2)),
     entry_count: closed.length,
     open_count: open.length,
     night_auto_count: nightAuto.length,
