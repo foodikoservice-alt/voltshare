@@ -70,16 +70,27 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## High‑Level Design (HLD)
 
-The system follows a **client‑centric SPA** architecture with a thin server layer (Supabase). Core responsibilities:
-1. **Authentication** – Managed by Supabase auth, exposed via `AuthContext`.
-2. **Data Access** – All CRUD operations are encapsulated in custom React hooks that call Supabase RPCs or direct table queries.
-3. **State Management** – Local React state combined with context for global auth and UI preferences (dark mode, toast notifications).
-4. **Real‑time Sync** – Each hook that displays mutable data (e.g., meter entries) subscribes to a Supabase realtime channel to push updates instantly to the UI.
-5. **Presentation Layer** – Tailwind‑styled, component‑driven UI with a clear separation between container‑style logic (hooks) and presentational components.
+The application is a client‑centric single‑page app that communicates directly with Supabase for authentication, data storage, and realtime updates.
+
+```mermaid
+flowchart TD
+    UI[UI Components] --> Hooks[Custom React Hooks]
+    Hooks --> Supabase[Supabase Client]
+    Supabase --> DB[(PostgreSQL)]
+    Supabase --> Realtime[Realtime Channels]
+    Realtime --> UI
+```
+
+**Key responsibilities**
+1. **Authentication** – Supabase Auth exposed via `AuthContext`.
+2. **Data Access** – CRUD operations performed in custom hooks (`useMembers`, `useMeterEntries`, etc.) that call Supabase tables or RPCs.
+3. **State Management** – Hook‑level state combined with global React context for UI preferences and toast notifications.
+4. **Realtime Sync** – Hooks subscribe to Supabase realtime channels to reflect changes instantly in the UI.
+5. **Presentation Layer** – Tailwind‑styled, component‑driven UI keeping rendering separate from data logic.
 
 ### Component Interaction Flow
 ```
-User Interaction → UI Component (e.g., MeterForm) → Hook (useMeterEntries) → Supabase → Realtime Channel → Hook updates → UI refresh
+User Interaction → UI Component → Hook → Supabase → Realtime Channel → Hook updates → UI refresh
 ```
 
 ## Low‑Level Design (LLD) & Class Diagram
@@ -101,12 +112,27 @@ classDiagram
         +logout()
         +session
     }
-    class useMeterEntries {
-        +getAll()
-        +create(entry)
-        +update(id, entry)
-        +delete(id)
+    class useMembers {
+        +members: Member[]
+        +loading: boolean
+        +fetchMembers()
     }
+    class useMeterEntries {
+        +entries: MeterEntry[]
+        +addOpeningMeter()
+        +addClosingMeter()
+        +deleteEntry()
+        +refresh()
+    }
+    class useMemberTotals {
+        +totals: MemberTotal[]
+        +refresh()
+    }
+    class useMemberShiftBreakdown { }
+    class useMonthlyStats { }
+    class useSettings { }
+    class useDarkMode { }
+    class useToast { }
     class HistoryTable {
         +render(entries)
         +onEdit(id)
@@ -117,9 +143,48 @@ classDiagram
     }
     AuthContext --> SupabaseClient : uses
     useAuth --> AuthContext : consumes
+    useMembers --> SupabaseClient : CRUD
     useMeterEntries --> SupabaseClient : CRUD
+    useMemberTotals --> SupabaseClient : read member_usage
     HistoryTable --> useMeterEntries : reads
     MeterForm --> useMeterEntries : writes
+```
+
+**Database schema (Mermaid ER)**
+
+```mermaid
+erDiagram
+    MEMBERS {
+        uuid id PK "Primary key"
+        varchar name
+        varchar shift_type
+        timestamp created_at
+    }
+    METER_ENTRIES {
+        uuid id PK
+        varchar entry_type
+        boolean is_auto
+        boolean is_weekend
+        varchar status
+        numeric start_meter
+        numeric end_meter
+        numeric usage_units
+        timestamp opening_at
+        timestamp closing_at
+        text notes
+        numeric rate_per_unit
+        timestamp created_at
+    }
+    MEMBER_USAGE {
+        uuid id PK
+        uuid member_id FK "→ MEMBERS.id"
+        uuid meter_entry_id FK "→ METER_ENTRIES.id"
+        numeric units
+        numeric cost
+        varchar usage_month
+    }
+    MEMBERS ||--o{ MEMBER_USAGE : has
+    METER_ENTRIES ||--o{ MEMBER_USAGE : creates
 ```
 
 ## API Documentation (Supabase Endpoints)
