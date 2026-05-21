@@ -129,53 +129,61 @@ export const MeterForm: React.FC<MeterFormProps> = ({
 
       {tab === 'opening' ? (
         <div className="space-y-3 sm:space-y-4">
-          <div className="space-y-1.5">
-            <label className="text-[10px] font-bold text-muted uppercase tracking-widest ml-1">
-              Opening Meter Reading
-            </label>
-            <input
-              type="number"
-              step="0.1"
-              inputMode="decimal"
-              placeholder="e.g. 1280"
-              value={openingMeter}
-              onChange={e => setOpeningMeter(e.target.value)}
-              className={`input-field text-base ${errors.opening_meter ? 'border-error/50' : ''}`}
+          {openDayEntries.length > 0 ? (
+            <EmptyState
+              heading="Ongoing Shift Active"
+              message="Please switch to the Closing Meter tab to finish your active session before logging a new Opening Meter."
             />
-            {errors.opening_meter && (
-              <p className="text-xs text-error flex items-center gap-1">
-                <AlertCircle className="w-3 h-3" /> {errors.opening_meter}
-              </p>
-            )}
-          </div>
+          ) : (
+            <>
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold text-muted uppercase tracking-widest ml-1">
+                  Opening Meter Reading
+                </label>
+                <input
+                  type="number"
+                  step="0.1"
+                  inputMode="decimal"
+                  placeholder="e.g. 1280"
+                  value={openingMeter}
+                  onChange={e => setOpeningMeter(e.target.value)}
+                  className={`input-field text-base ${errors.opening_meter ? 'border-error/50' : ''}`}
+                />
+                {errors.opening_meter && (
+                  <p className="text-xs text-error flex items-center gap-1">
+                    <AlertCircle className="w-3 h-3" /> {errors.opening_meter}
+                  </p>
+                )}
+              </div>
 
-          <label className="flex items-center gap-2 text-sm cursor-pointer">
-            <input
-              type="checkbox"
-              checked={isWeekend}
-              onChange={e => setIsWeekend(e.target.checked)}
-              className="rounded"
-            />
-            <span className="text-body-strong font-medium">Weekend mode (all 4 members share costs equally)</span>
-          </label>
+              <label className="flex items-center gap-2 text-sm cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={isWeekend}
+                  onChange={e => setIsWeekend(e.target.checked)}
+                  className="rounded"
+                />
+                <span className="text-body-strong font-medium">Weekend mode (all 4 members share costs equally)</span>
+              </label>
 
-          {lastClosedDay && (
-            <NightShiftPreview
-              prevClosingMeter={lastClosedDay.end_meter ?? 0}
-              nextOpeningMeter={parseFloat(openingMeter) || null}
-              isWeekend={isWeekend}
-              rate={unitRate}
-            />
+              {lastClosedDay && (
+                <NightShiftPreview
+                  prevClosingMeter={lastClosedDay.end_meter ?? 0}
+                  nextOpeningMeter={parseFloat(openingMeter) || null}
+                  isWeekend={isWeekend}
+                  rate={unitRate}
+                />
+              )}
+
+              <button
+                onClick={handleOpeningSubmit}
+                disabled={loading}
+                className="btn-primary mt-2 active:scale-[0.97]"
+              >
+                {loading ? 'Saving...' : 'Log Opening Meter'}
+              </button>
+            </>
           )}
-
-
-          <button
-            onClick={handleOpeningSubmit}
-            disabled={loading}
-            className="btn-primary mt-2 active:scale-[0.97]"
-          >
-            {loading ? 'Saving...' : 'Log Opening Meter'}
-          </button>
         </div>
       ) : (
         <div className="space-y-3 sm:space-y-4">
