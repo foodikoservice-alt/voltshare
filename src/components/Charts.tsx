@@ -20,10 +20,30 @@ const FONT = "'Inter', system-ui, sans-serif";
 
 function useCSSVar(name: string, fallback: string) {
   const [val, setVal] = useState(fallback);
+
   useEffect(() => {
-    const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-    if (v) setVal(v);
-  }, [name]);
+    const updateVal = () => {
+      const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+      if (v && v !== val) setVal(v);
+    };
+
+    // Initial check
+    updateVal();
+
+    // Listen for dark mode class toggles on the HTML element
+    const observer = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        if (mutation.attributeName === 'class') {
+          updateVal();
+        }
+      }
+    });
+
+    observer.observe(document.documentElement, { attributes: true });
+
+    return () => observer.disconnect();
+  }, [name, val]);
+
   return val;
 }
 
@@ -46,6 +66,11 @@ function BarChart({ title, labels, dayValues, nightValues, formatTick, formatToo
   const surface = useCSSVar('--color-surface-card', '#efe9de');
   const primary = useCSSVar('--color-primary', '#cc785c');
 
+  const dayBg = useCSSVar('--chart-day-bg', 'rgba(251,191,36,0.85)');
+  const dayBorder = useCSSVar('--chart-day-border', '#fbbf24');
+  const nightBg = useCSSVar('--chart-night-bg', 'rgba(6,182,212,0.85)');
+  const nightBorder = useCSSVar('--chart-night-border', '#06b6d4');
+
   const tooltipStyle = {
     backgroundColor: surface + 'f0',
     borderColor: primary + '40',
@@ -66,8 +91,8 @@ function BarChart({ title, labels, dayValues, nightValues, formatTick, formatToo
       {
         label: 'Day',
         data: dayValues,
-        backgroundColor: 'rgba(251,191,36,0.85)',
-        borderColor: '#fbbf24',
+        backgroundColor: dayBg,
+        borderColor: dayBorder,
         borderWidth: 2,
         borderRadius: radius,
         borderSkipped: false,
@@ -75,8 +100,8 @@ function BarChart({ title, labels, dayValues, nightValues, formatTick, formatToo
       {
         label: 'Night',
         data: nightValues,
-        backgroundColor: 'rgba(6,182,212,0.85)',
-        borderColor: '#06b6d4',
+        backgroundColor: nightBg,
+        borderColor: nightBorder,
         borderWidth: 2,
         borderRadius: radius,
         borderSkipped: false,
@@ -138,12 +163,17 @@ const CostDonut = ({ dayCost, nightCost }: { dayCost: number; nightCost: number 
   const body = useCSSVar('--color-body', '#3d3d3a');
   const muted = useCSSVar('--color-muted', '#6c6a64');
 
+  const dayBg = useCSSVar('--chart-day-bg', 'rgba(251,191,36,0.85)');
+  const dayBorder = useCSSVar('--chart-day-border', '#fbbf24');
+  const nightBg = useCSSVar('--chart-night-bg', 'rgba(6,182,212,0.85)');
+  const nightBorder = useCSSVar('--chart-night-border', '#06b6d4');
+
   const donutData = {
     labels: ['Day', 'Night'],
     datasets: [{
       data: [dayCost, nightCost],
-      backgroundColor: ['rgba(251,191,36,0.85)', 'rgba(6,182,212,0.85)'],
-      borderColor: ['#fbbf24', '#06b6d4'],
+      backgroundColor: [dayBg, nightBg],
+      borderColor: [dayBorder, nightBorder],
       borderWidth: 2,
       hoverOffset: 6,
     }],
@@ -223,6 +253,11 @@ interface ChartsProps {
 // Remove unused members prop
 export function Charts({ selectedMonth, onMonthChange }: Omit<ChartsProps, 'members'>) {
   const { months, loading } = useMonthlyStats();
+  
+  const dayBg = useCSSVar('--chart-day-bg', 'rgba(251,191,36,0.85)');
+  const dayBorder = useCSSVar('--chart-day-border', '#fbbf24');
+  const nightBg = useCSSVar('--chart-night-bg', 'rgba(6,182,212,0.85)');
+  const nightBorder = useCSSVar('--chart-night-border', '#06b6d4');
 
   if (loading || months.length === 0) return null;
 
@@ -251,8 +286,8 @@ export function Charts({ selectedMonth, onMonthChange }: Omit<ChartsProps, 'memb
       {
         label: 'Units (kWh)',
         data: [single?.day_units ?? 0, single?.night_units ?? 0],
-        backgroundColor: ['rgba(251,191,36,0.85)', 'rgba(6,182,212,0.85)'],
-        borderColor: ['#fbbf24', '#06b6d4'],
+        backgroundColor: [dayBg, nightBg],
+        borderColor: [dayBorder, nightBorder],
         borderWidth: 2,
         borderRadius: 10,
         borderSkipped: false as const,
