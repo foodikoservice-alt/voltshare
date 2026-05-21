@@ -102,7 +102,6 @@ function AppContent() {
               </section>
 
               <Charts
-                members={members}
                 selectedMonth={selectedMonth}
                 onMonthChange={setSelectedMonth}
               />
@@ -124,6 +123,7 @@ function AppContent() {
                     <MeterForm
                       openDayEntries={openDayEntries}
                       lastClosedDay={lastClosedDay}
+                      unitRate={unitRate}
                       onAddOpeningMeter={async (data) => {
                         const result = await addOpeningMeter(data, unitRate);
                         await refreshTotals();

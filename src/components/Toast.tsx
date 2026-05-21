@@ -1,4 +1,4 @@
-import { useEffect, type ReactNode } from 'react';
+import { type ReactNode } from 'react';
 import { CheckCircle2, XCircle, X } from 'lucide-react';
 
 interface ToastItem {
