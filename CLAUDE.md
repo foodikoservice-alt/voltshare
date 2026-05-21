@@ -26,8 +26,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **`src/lib/supabase.ts`** – creates a Supabase client from environment variables.
 - Custom hooks encapsulate all data operations:
   - **`useMembers`** – fetches the list of members.
-  - **`useMeterEntries`** – CRUD for electricity meter entries, night‑shift auto‑entry creation, and real‑time updates via Supabase channels.
-  - **`useMemberTotals`** – aggregates per‑member usage for a selected month.
+  - **`useMeterEntries`** – CRUD for electricity meter entries, night‑shift auto‑entry creation, and real‑time updates via Supabase channels. Uses a `membersRef` (via `useRef`) internally so async callbacks always read the latest members list — **do not use the raw `members` prop inside async functions**.
+  - **`useMemberTotals`** – aggregates per‑member usage for a selected month. Also uses `membersRef` / `monthRef` for stable async reads.
   - **`useMemberShiftBreakdown`** – detailed day/night shift breakdown per member.
   - **`useMonthlyStats`** – provides month‑level statistics (e.g., totals, cost).
   - **`useSettings`** – reads global app settings such as the per‑unit rate.
@@ -60,6 +60,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - The UI respects the `isEditor` flag to conditionally render editing controls.
 - Supabase is the sole backend; queries are performed with the generated client (`src/lib/supabase.ts`).
 - Real‑time updates use Supabase's `channel` API (e.g., shift‑breakdown and meter‑entry listeners).
+- **Stale closure pattern**: Hooks that accept props (e.g., `members`) and use them inside async functions **must** sync the prop into a `useRef` and read `ref.current` inside async callbacks. This prevents stale closures when props update after the hook initialises.
 
 ## README Highlights & ESLint Configuration
 
@@ -180,12 +181,16 @@ erDiagram
         uuid member_id FK "→ MEMBERS.id"
         uuid meter_entry_id FK "→ METER_ENTRIES.id"
         numeric units
-        numeric cost
+        numeric cost "GENERATED ALWAYS AS (units * 14)"
         varchar usage_month
     }
     MEMBERS ||--o{ MEMBER_USAGE : has
     METER_ENTRIES ||--o{ MEMBER_USAGE : creates
 ```
+
+> **Important – `member_usage.cost` is a generated column.**
+> It is computed automatically by Postgres as `units * 14`. **Never include `cost` in INSERT payloads** — doing so causes the entire insert to fail with a Postgres error. Only pass `member_id`, `meter_entry_id`, `units`, and `usage_month` when inserting into `member_usage`.
+> The helper `buildMemberUsageRows` in `src/utils/calculations.ts` already omits `cost` correctly.
 
 ## API Documentation (Supabase Endpoints)
 
@@ -210,3 +215,21 @@ All API calls require the `Authorization` header with the Supabase JWT token obt
 5. **Testing** – if a test framework is introduced, locate tests next to the file they verify (e.g., `Component.test.tsx`).
 6. **ESLint** – update `eslint.config.js` for new rule sets; ensure any new files are covered by the `tsconfig.app.json` project reference.
 7. **Real‑time behavior** – when adding new tables to Supabase, remember to add a corresponding realtime channel subscription if UI needs live updates.
+8. **Generated columns** – always check if a column is `GENERATED ALWAYS AS` before including it in an insert payload. Currently `member_usage.cost` is generated. Sending a value for it causes the insert to fail silently in older code paths.
+9. **Async hooks + props** – any hook that receives a prop (e.g., `members: Member[]`) and reads it inside an `async` function must sync the prop to a `useRef` (`membersRef`) and read `membersRef.current` inside the async body. Reading the raw prop risks a stale closure.
+
+## Bug History
+
+### 2026‑05‑21 — `member_usage` not updating on new entries
+
+**Symptoms:** Adding opening/closing meter entries did not create rows in `member_usage`; member cards showed 0 units.
+
+**Root causes (three bugs):**
+
+| # | File | Bug | Fix |
+|---|------|-----|-----|
+| 1 | `src/utils/calculations.ts` · `buildMemberUsageRows` | Included `cost` in the insert payload. `member_usage.cost` is a `GENERATED ALWAYS AS` column — Postgres rejects the insert entirely. | Removed `cost` from the returned row object. |
+| 2 | `src/hooks/useMeterEntries.ts` · `addOpeningMeter` / `addClosingMeter` | Used `members` directly from the closure. If members hadn't loaded when the hook initialised, the async functions operated on `[]`. | Added `membersRef` (`useRef`) synced in a `useEffect`; async functions now read `membersRef.current`. |
+| 3 | `src/hooks/useMeterEntries.ts` · `addClosingMeter` | The `member_usage` insert result was not checked — failures were silently swallowed. | Added `if (usageErr) throw usageErr`. |
+
+**Database backfill:** 12 rows were manually inserted via Supabase MCP for the 6 closed entries that had 0 usage rows (entries from 2026‑05‑18 to 2026‑05‑21).

@@ -8,11 +8,11 @@ export function getSplitCount(entryType: EntryType, isWeekend: boolean): number 
 }
 
 export function calculateUsage(start: number, end: number): number {
-  return parseFloat((end - start).toFixed(1));
+  return end - start;
 }
 
 export function calculatePerPerson(usage: number, entryType: EntryType, isWeekend: boolean): number {
-  return parseFloat((usage / getSplitCount(entryType, isWeekend)).toFixed(1));
+  return parseFloat((usage / getSplitCount(entryType, isWeekend)).toFixed(2));
 }
 
 export function calculateCost(units: number, rate: number = DEFAULT_COST_PER_UNIT): number {
@@ -20,7 +20,7 @@ export function calculateCost(units: number, rate: number = DEFAULT_COST_PER_UNI
 }
 
 export function buildMemberUsageRows(
-  entry: { id: string; usage_units: number; entry_type: EntryType; is_weekend: boolean, rate_per_unit?: number | null },
+  entry: { id: string; usage_units: number; entry_type: EntryType; is_weekend: boolean, opening_at: string, rate_per_unit?: number | null },
   members: Member[]
 ) {
   let eligible: Member[];
@@ -34,14 +34,12 @@ export function buildMemberUsageRows(
   }
 
   const perPerson = calculatePerPerson(entry.usage_units, entry.entry_type, entry.is_weekend);
-  const cost = calculateCost(perPerson, entry.rate_per_unit || DEFAULT_COST_PER_UNIT);
 
   return eligible.map(m => ({
     member_id: m.id,
     meter_entry_id: entry.id,
     units: perPerson,
-    cost: cost,
-    usage_month: getISTMonthKey(new Date().toISOString())
+    usage_month: getISTMonthKey(entry.opening_at)
   }));
 }
 
@@ -62,13 +60,13 @@ export function calculateGrandTotals(entries: MeterEntry[], defaultRate: number 
   
   closed.forEach(e => {
     const units = e.usage_units ?? 0;
-    const rate = e.rate_per_unit || defaultRate;
+    const rate = e.rate_per_unit ?? defaultRate;
     total_units += units;
     total_cost += units * rate;
   });
 
   return {
-    total_units: parseFloat(total_units.toFixed(1)),
+    total_units: parseFloat(total_units.toFixed(2)),
     total_cost: parseFloat(total_cost.toFixed(2)),
     entry_count: closed.length,
     open_count: open.length,
@@ -78,7 +76,8 @@ export function calculateGrandTotals(entries: MeterEntry[], defaultRate: number 
 
 export function calculateNightPreview(
   prevClosingMeter: number | null,
-  nextOpeningMeter: number
+  nextOpeningMeter: number,
+  rate: number = DEFAULT_COST_PER_UNIT
 ): { night_units: number | null; night_cost: number | null } {
   if (prevClosingMeter === null || isNaN(nextOpeningMeter)) {
     return { night_units: null, night_cost: null };
@@ -86,7 +85,7 @@ export function calculateNightPreview(
   const night_units = calculateUsage(prevClosingMeter, nextOpeningMeter);
   if (night_units <= 0) return { night_units: null, night_cost: null };
   return {
-    night_units,
-    night_cost: calculateCost(night_units, DEFAULT_COST_PER_UNIT),
+    night_units: parseFloat(night_units.toFixed(2)),
+    night_cost: calculateCost(night_units, rate),
   };
 }

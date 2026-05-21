@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import type { MeterEntry, OpeningMeterFormData, Member } from '../types/app.types';
 import { supabase } from '../lib/supabase';
 import { calculateUsage, buildMemberUsageRows } from '../utils/calculations';
@@ -6,6 +6,13 @@ import { calculateUsage, buildMemberUsageRows } from '../utils/calculations';
 export function useMeterEntries(members: Member[]) {
   const [entries, setEntries] = useState<MeterEntry[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Keep a stable ref so async callbacks always read the latest members list
+  // without needing to be re-created every time members changes.
+  const membersRef = useRef<Member[]>(members);
+  useEffect(() => {
+    membersRef.current = members;
+  }, [members]);
 
   const fetchEntries = useCallback(async () => {
     try {
@@ -58,32 +65,38 @@ export function useMeterEntries(members: Member[]) {
   const addOpeningMeter = async (formData: OpeningMeterFormData, rate: number = 14) => {
     const opening = parseFloat(formData.opening_meter);
 
-    const { data: allEntries } = await supabase
+    const { data: allEntries, error: fetchErr } = await supabase
       .from('meter_entries')
       .select('*')
       .order('opening_at', { ascending: false });
+
+    if (fetchErr) throw fetchErr;
 
     const lastClosed = allEntries?.find(
       e => e.entry_type === 'day_shift' && e.status === 'closed'
     );
     const alreadyHasNight = allEntries?.some(
-      e => e.entry_type === 'night_shift' && e.start_meter === lastClosed?.end_meter
+      e => e.entry_type === 'night_shift' && Math.abs(e.start_meter - (lastClosed?.end_meter || 0)) < 0.01
     );
 
     let nightEntryCreated = false;
     let nightUnits = 0;
+    let createdNightEntryId: string | null = null;
 
     if (lastClosed && !alreadyHasNight) {
       const prevClosing = Number(lastClosed.end_meter);
       const units = calculateUsage(prevClosing, opening);
 
       if (units > 0) {
+        const prevDate = new Date(lastClosed.closing_at || new Date().toISOString());
+        const isNightWeekend = prevDate.getDay() === 0 || prevDate.getDay() === 6;
+
         const { data: nightEntry, error: nightErr } = await supabase
           .from('meter_entries')
           .insert({
             entry_type: 'night_shift',
             is_auto: true,
-            is_weekend: formData.is_weekend,
+            is_weekend: isNightWeekend,
             status: 'closed',
             start_meter: prevClosing,
             end_meter: opening,
@@ -96,13 +109,18 @@ export function useMeterEntries(members: Member[]) {
           .single();
 
         if (nightErr) throw nightErr;
+        createdNightEntryId = nightEntry.id;
 
         const nightRows = buildMemberUsageRows(
-          { id: nightEntry.id, usage_units: units, entry_type: 'night_shift', is_weekend: formData.is_weekend, rate_per_unit: rate },
-          members
+          { id: nightEntry.id, usage_units: units, entry_type: 'night_shift', is_weekend: isNightWeekend, opening_at: nightEntry.opening_at, rate_per_unit: rate },
+          membersRef.current
         );
         const { error: usageErr } = await supabase.from('member_usage').insert(nightRows);
-        if (usageErr) throw usageErr;
+        
+        if (usageErr) {
+          await supabase.from('meter_entries').delete().eq('id', nightEntry.id);
+          throw usageErr;
+        }
 
         nightEntryCreated = true;
         nightUnits = units;
@@ -118,11 +136,16 @@ export function useMeterEntries(members: Member[]) {
         status: 'open',
         start_meter: opening,
         opening_at: new Date().toISOString(),
-        notes: 'notes' in formData ? (formData as {notes?: string}).notes || null : null,
+        notes: formData.notes || null,
         rate_per_unit: rate,
       });
 
-    if (error) throw error;
+    if (error) {
+      if (createdNightEntryId) {
+        await supabase.from('meter_entries').delete().eq('id', createdNightEntryId);
+      }
+      throw error;
+    }
     await fetchEntries();
     return { nightEntryCreated, nightUnits };
   };
@@ -145,17 +168,21 @@ export function useMeterEntries(members: Member[]) {
 
     if (error) throw error;
 
+    await supabase.from('member_usage').delete().eq('meter_entry_id', openEntry.id);
+
     const rows = buildMemberUsageRows(
-      { id: closed.id, usage_units, entry_type: 'day_shift', is_weekend: closed.is_weekend, rate_per_unit: closed.rate_per_unit },
-      members
+      { id: closed.id, usage_units, entry_type: 'day_shift', is_weekend: closed.is_weekend, opening_at: closed.opening_at, rate_per_unit: closed.rate_per_unit },
+      membersRef.current
     );
-    await supabase.from('member_usage').insert(rows);
+    const { error: usageErr } = await supabase.from('member_usage').insert(rows);
+    if (usageErr) throw usageErr;
 
     await fetchEntries();
   };
 
   const deleteEntry = async (id: string) => {
-    await supabase.from('meter_entries').delete().eq('id', id);
+    const { error } = await supabase.from('meter_entries').delete().eq('id', id);
+    if (error) throw error;
     await fetchEntries();
   };
 

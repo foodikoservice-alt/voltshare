@@ -5,12 +5,13 @@ interface NightShiftPreviewProps {
   prevClosingMeter: number;
   nextOpeningMeter: number | null;
   isWeekend: boolean;
+  rate: number;
 }
 
-export function NightShiftPreview({ prevClosingMeter, nextOpeningMeter, isWeekend }: NightShiftPreviewProps) {
+export function NightShiftPreview({ prevClosingMeter, nextOpeningMeter, isWeekend, rate }: NightShiftPreviewProps) {
   const valid = nextOpeningMeter !== null && nextOpeningMeter > prevClosingMeter;
   const preview = valid
-    ? calculateNightPreview(prevClosingMeter, nextOpeningMeter!)
+    ? calculateNightPreview(prevClosingMeter, nextOpeningMeter!, rate)
     : { night_units: null, night_cost: null };
 
   return (

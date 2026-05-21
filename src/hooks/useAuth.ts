@@ -16,13 +16,15 @@ export function useAuth() {
     if (saved) {
       try {
         const session = JSON.parse(saved);
-        if (session.username && session.role) {
+        if (session.username && session.role && session.expiresAt > Date.now()) {
           return {
             role: session.role,
             username: session.username,
             isEditor: session.role === 'editor',
             loading: false,
           };
+        } else if (session.expiresAt <= Date.now()) {
+          localStorage.removeItem('voltshare_session');
         }
       } catch {
         console.error('Failed to parse saved session');
@@ -66,10 +68,11 @@ export function useAuth() {
         loading: false,
       };
 
-      // Save to localStorage
+      // Save to localStorage with 24-hour expiry
       localStorage.setItem('voltshare_session', JSON.stringify({
         username,
         role,
+        expiresAt: Date.now() + 24 * 60 * 60 * 1000,
       }));
 
       setState(newState);

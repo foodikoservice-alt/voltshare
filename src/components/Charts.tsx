@@ -131,13 +131,12 @@ function BarChart({ title, labels, dayValues, nightValues, formatTick, formatToo
 // ─── Main Export ──────────────────────────────────────────────────────────────
 
 // ─── Donut chart for cost (Day vs Night) ───────────────────────────────────
-const CostDonut = ({ dayCost, nightCost, displayTotal }: { dayCost: number; nightCost: number; displayTotal?: number }) => {
+const CostDonut = ({ dayCost, nightCost }: { dayCost: number; nightCost: number }) => {
   const surface = useCSSVar('--color-surface-card', '#efe9de');
   const primary = useCSSVar('--color-primary', '#cc785c');
   const ink = useCSSVar('--color-ink', '#141413');
   const body = useCSSVar('--color-body', '#3d3d3a');
   const muted = useCSSVar('--color-muted', '#6c6a64');
-  const total = displayTotal ?? (dayCost + nightCost);
 
   const donutData = {
     labels: ['Day', 'Night'],
@@ -169,7 +168,7 @@ const CostDonut = ({ dayCost, nightCost, displayTotal }: { dayCost: number; nigh
           generateLabels: (chart: ChartJS) => {
             const ds = chart.data.datasets[0];
             return (chart.data.labels as string[]).map((label, i) => ({
-              text: `${label}  ₹${(ds.data[i] as number).toFixed(2)}`,
+              text: `${label}  ${(ds.data[i] as number).toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
               fillStyle: (ds.backgroundColor as string[])[i],
               strokeStyle: (ds.borderColor as string[])[i],
               lineWidth: 2,
@@ -196,7 +195,7 @@ const CostDonut = ({ dayCost, nightCost, displayTotal }: { dayCost: number; nigh
           label: (ctx: TooltipItem<'doughnut'>) => {
             const sliceSum = dayCost + nightCost;
             const percent = sliceSum > 0 ? ((ctx.parsed as number / sliceSum) * 100).toFixed(1) : '0';
-            return ` Cost: ₹${(ctx.parsed as number).toFixed(2)} (${percent}%)`;
+            return ` Cost: ${(ctx.parsed as number).toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 2, maximumFractionDigits: 2 })} (${percent}%)`;
           }
         },
       },
@@ -207,11 +206,6 @@ const CostDonut = ({ dayCost, nightCost, displayTotal }: { dayCost: number; nigh
     <div className="rounded-2xl border border-hairline bg-surface-card p-4 sm:p-6 space-y-3">
       <h3 className="text-xs font-black text-muted uppercase tracking-widest">Cost (₹)</h3>
       <div className="relative" style={{ height: 240 }}>
-        {/* Centred total label (z-0 so tooltip renders on top of it) */}
-        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-0" style={{ paddingBottom: '2.5rem' }}>
-          <span className="text-[10px] font-bold text-muted uppercase tracking-widest">Total</span>
-          <span className="text-lg font-black text-ink">₹{total.toFixed(2)}</span>
-        </div>
         <div className="relative z-10 h-full w-full">
           <Doughnut data={donutData} options={donutOptions} />
         </div>
@@ -226,25 +220,20 @@ interface ChartsProps {
   onMonthChange: (month: string) => void;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export function Charts({ members: _members, selectedMonth, onMonthChange }: ChartsProps) {
+// Remove unused members prop
+export function Charts({ selectedMonth, onMonthChange }: Omit<ChartsProps, 'members'>) {
   const { months, loading } = useMonthlyStats();
 
   if (loading || months.length === 0) return null;
 
-  // Active month: use selectedMonth if valid, otherwise default to the latest month
-  const latestMonth = months[0]?.month ?? '';
-  const activeMonth = months.find(m => m.month === selectedMonth)?.month ?? latestMonth;
+  const isSingleMonth = selectedMonth !== '';
+  const activeMonth = isSingleMonth ? (months.find(m => m.month === selectedMonth)?.month ?? months[0]?.month) : '';
 
-  // If viewing a specific month → 2 bars: Day | Night
-  // If viewing all months  → stacked monthly trend
-  const isSingleMonth = !!activeMonth;
-
-  const single = months.find(m => m.month === activeMonth);
+  const single = isSingleMonth ? months.find(m => m.month === activeMonth) : undefined;
 
   const labels = isSingleMonth
-    ? [`Day ${single?.day_units.toFixed(1)}u`, `Night ${single?.night_units.toFixed(1)}u`]
-    : months.map(m => `${m.label} (${(m.day_units + m.night_units).toFixed(1)}u)`);
+    ? [`Day ${single?.day_units.toFixed(2)}u`, `Night ${single?.night_units.toFixed(2)}u`]
+    : months.map(m => `${m.label} (${(m.day_units + m.night_units).toFixed(2)}u)`);
 
   const dayUnits = isSingleMonth ? [single?.day_units ?? 0] : months.map(m => m.day_units);
   const nightUnits = isSingleMonth ? [single?.night_units ?? 0] : months.map(m => m.night_units);
@@ -255,8 +244,8 @@ export function Charts({ members: _members, selectedMonth, onMonthChange }: Char
   // For single month, render as three separate simple bars (one dataset)
   const singleMonthUnitsData = {
     labels: [
-      `Day ${single?.day_units.toFixed(1)}u`,
-      `Night ${single?.night_units.toFixed(1)}u`
+      `Day ${single?.day_units.toFixed(2)}u`,
+      `Night ${single?.night_units.toFixed(2)}u`
     ],
     datasets: [
       {
@@ -274,12 +263,13 @@ export function Charts({ members: _members, selectedMonth, onMonthChange }: Char
 
 
   const makeOptions = (formatTick: (v: number | string) => string, formatTooltip: (v: number) => string) => {
-    const ink = getComputedStyle(document.documentElement).getPropertyValue('--color-ink').trim() || '#141413';
-    const muted = getComputedStyle(document.documentElement).getPropertyValue('--color-muted').trim() || '#6c6a64';
-    const mutedSft = getComputedStyle(document.documentElement).getPropertyValue('--color-muted-soft').trim() || '#8e8b82';
-    const surface = getComputedStyle(document.documentElement).getPropertyValue('--color-surface-card').trim() || '#efe9de';
-    const primary = getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim() || '#cc785c';
-    const body = getComputedStyle(document.documentElement).getPropertyValue('--color-body').trim() || '#3d3d3a';
+    // Read from body classes or just use explicit values to avoid getComputedStyle during render
+    const ink = '#141413';
+    const muted = '#6c6a64';
+    const mutedSft = '#8e8b82';
+    const surface = '#efe9de';
+    const primary = '#cc785c';
+    const bodyColor = '#3d3d3a';
     return {
       responsive: true,
       maintainAspectRatio: false,
@@ -291,7 +281,7 @@ export function Charts({ members: _members, selectedMonth, onMonthChange }: Char
           borderWidth: 1,
           padding: 12,
           titleColor: ink,
-          bodyColor: body,
+          bodyColor: bodyColor,
           titleFont: { family: FONT, size: 12, weight: 'bold' as const },
           bodyFont: { family: FONT, size: 11 },
           cornerRadius: 10,
@@ -313,7 +303,7 @@ export function Charts({ members: _members, selectedMonth, onMonthChange }: Char
       <div className="flex items-center justify-between px-1">
         <h2 className="text-sm font-bold text-muted uppercase tracking-widest">Analytics</h2>
         {isSingleMonth && single && (
-          <span className="text-xs text-muted font-medium">{single.label} · {single.total_units.toFixed(1)} kWh</span>
+          <span className="text-xs text-muted font-medium">{single.label} · {single.total_units.toFixed(2)} kWh</span>
         )}
       </div>
 
@@ -322,8 +312,8 @@ export function Charts({ members: _members, selectedMonth, onMonthChange }: Char
         {months.map(m => (
           <button
             key={m.month}
-            onClick={() => onMonthChange(m.month === activeMonth && selectedMonth ? '' : m.month)}
-            className={`px-3 py-1 rounded-full text-xs font-bold transition-all border ${m.month === activeMonth
+            onClick={() => onMonthChange(m.month === selectedMonth ? '' : m.month)}
+            className={`px-3 py-1 rounded-full text-xs font-bold transition-all border ${m.month === selectedMonth
                 ? 'bg-primary text-white border-primary shadow-sm'
                 : 'bg-surface-card text-muted border-hairline hover:border-primary/40'
               }`}
@@ -339,13 +329,12 @@ export function Charts({ members: _members, selectedMonth, onMonthChange }: Char
             <div className="rounded-2xl border border-hairline bg-surface-card p-4 sm:p-6 space-y-3">
               <h3 className="text-xs font-black text-muted uppercase tracking-widest">Units (kWh)</h3>
               <div style={{ height: 240 }}>
-                <Bar data={singleMonthUnitsData} options={makeOptions(v => `${v}u`, v => `${v.toFixed(1)} kWh`)} />
+                <Bar data={singleMonthUnitsData} options={makeOptions(v => `${v}u`, v => `${v.toFixed(2)} kWh`)} />
               </div>
             </div>
             <CostDonut
               dayCost={single?.day_cost ?? 0}
               nightCost={single?.night_cost ?? 0}
-              displayTotal={(single?.building_day_cost ?? 0) + (single?.building_night_cost ?? 0)}
             />
           </>
         ) : (
@@ -356,12 +345,11 @@ export function Charts({ members: _members, selectedMonth, onMonthChange }: Char
               dayValues={dayUnits}
               nightValues={nightUnits}
               formatTick={v => `${v}u`}
-              formatTooltip={v => `${v.toFixed(1)} kWh`}
+              formatTooltip={v => `${v.toFixed(2)} kWh`}
             />
             <CostDonut
               dayCost={months.reduce((s, m) => s + m.day_cost, 0)}
               nightCost={months.reduce((s, m) => s + m.night_cost, 0)}
-              displayTotal={months.reduce((s, m) => s + m.building_day_cost + m.building_night_cost, 0)}
             />
           </>
         )}

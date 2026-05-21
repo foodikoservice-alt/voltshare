@@ -128,7 +128,7 @@ function AppContent() {
                         const result = await addOpeningMeter(data, unitRate);
                         await refreshTotals();
                         if (result?.nightEntryCreated) {
-                          showToast(`Opening Meter logged · Night Shift auto-entry created (${result.nightUnits.toFixed(1)} units)`, 'success');
+                          showToast(`Opening Meter logged · Night Shift auto-entry created (${(result.nightUnits ?? 0).toFixed(2)} units)`, 'success');
                         } else {
                           showToast('Opening Meter logged successfully', 'success');
                         }

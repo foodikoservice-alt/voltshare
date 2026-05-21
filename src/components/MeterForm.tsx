@@ -13,6 +13,7 @@ interface MeterFormProps {
   onAddOpeningMeter: (data: OpeningMeterFormData) => Promise<unknown>;
   onAddClosingMeter: (entry: MeterEntry, closingMeter: number) => Promise<void>;
   onError?: (message: string) => void;
+  unitRate: number;
 }
 
 export const MeterForm: React.FC<MeterFormProps> = ({
@@ -21,6 +22,7 @@ export const MeterForm: React.FC<MeterFormProps> = ({
   onAddOpeningMeter,
   onAddClosingMeter,
   onError,
+  unitRate,
 }) => {
   const [tab, setTab] = useState<'opening' | 'closing'>('opening');
   const [loading, setLoading] = useState(false);
@@ -34,12 +36,12 @@ export const MeterForm: React.FC<MeterFormProps> = ({
 
   const selectedEntry = openDayEntries.find(e => e.id === selectedEntryId);
 
-  const clearForm = () => {
+  const clearErrors = () => {
     setErrors({});
   };
 
   const handleOpeningSubmit = async () => {
-    clearForm();
+    clearErrors();
     const data: OpeningMeterFormData = { opening_meter: openingMeter, is_weekend: isWeekend, notes: '' };
     const validation = validateOpeningMeter(data);
     if (validation.length > 0) {
@@ -65,7 +67,7 @@ export const MeterForm: React.FC<MeterFormProps> = ({
 
   const handleClosingSubmit = async () => {
     if (!selectedEntry) return;
-    clearForm();
+    clearErrors();
 
     if (!closingMeter || isNaN(parseFloat(closingMeter))) {
       setErrors({ closing_meter: 'Closing Meter reading is required' });
@@ -159,9 +161,10 @@ export const MeterForm: React.FC<MeterFormProps> = ({
 
           {lastClosedDay && (
             <NightShiftPreview
-              prevClosingMeter={lastClosedDay.end_meter!}
+              prevClosingMeter={lastClosedDay.end_meter ?? 0}
               nextOpeningMeter={parseFloat(openingMeter) || null}
               isWeekend={isWeekend}
+              rate={unitRate}
             />
           )}
 
@@ -225,6 +228,7 @@ export const MeterForm: React.FC<MeterFormProps> = ({
                     openingMeter={selectedEntry.start_meter}
                     closingMeter={parseFloat(closingMeter) || null}
                     isWeekend={selectedEntry.is_weekend}
+                    rate={unitRate}
                   />
 
                   <button

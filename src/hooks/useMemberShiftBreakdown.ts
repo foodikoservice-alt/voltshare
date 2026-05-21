@@ -55,9 +55,9 @@ export function useMemberShiftBreakdown(members: Member[]) {
         const s = map.get(member.id) ?? { day_u: 0, night_u: 0, day_c: 0, night_c: 0 };
         return {
           member,
-          day_units:   parseFloat(s.day_u.toFixed(1)),
-          night_units: parseFloat(s.night_u.toFixed(1)),
-          total_units: parseFloat((s.day_u + s.night_u).toFixed(1)),
+          day_units:   parseFloat(s.day_u.toFixed(2)),
+          night_units: parseFloat(s.night_u.toFixed(2)),
+          total_units: parseFloat((s.day_u + s.night_u).toFixed(2)),
           day_cost:    parseFloat(s.day_c.toFixed(2)),
           night_cost:  parseFloat(s.night_c.toFixed(2)),
           total_cost:  parseFloat((s.day_c + s.night_c).toFixed(2)),

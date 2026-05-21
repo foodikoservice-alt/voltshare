@@ -40,7 +40,7 @@ export function useMemberTotals(members: Member[], selectedMonth?: string) {
       const isMissingColumn = error && (
         error.code === '42703' || 
         error.message?.includes('usage_month') || 
-        error.message?.includes('column')
+        error.message?.includes('column "usage_month" does not exist')
       );
 
       if (isMissingColumn) {
@@ -83,7 +83,7 @@ export function useMemberTotals(members: Member[], selectedMonth?: string) {
         const stats = memberMap.get(member.id) || { units: 0, cost: 0 };
         return {
           member,
-          total_units: parseFloat(stats.units.toFixed(1)),
+          total_units: parseFloat(stats.units.toFixed(2)),
           total_cost: parseFloat(stats.cost.toFixed(2)),
         };
       });
@@ -113,19 +113,21 @@ export function useMemberTotals(members: Member[], selectedMonth?: string) {
 
   // Realtime subscription: any change to member_usage triggers a re-fetch
   useEffect(() => {
+    let pending: ReturnType<typeof setTimeout>;
     const channel = supabase
       .channel('member_usage_realtime')
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'member_usage' },
         () => {
-          // Small delay to let the DB transaction fully commit before reading
-          setTimeout(() => calculateTotals(), 300);
+          clearTimeout(pending);
+          pending = setTimeout(() => calculateTotals(), 300);
         }
       )
       .subscribe();
 
     return () => {
+      clearTimeout(pending);
       supabase.removeChannel(channel);
     };
   }, [calculateTotals]); // calculateTotals is stable (no deps), so this runs once

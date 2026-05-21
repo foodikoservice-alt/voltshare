@@ -84,31 +84,32 @@ export function useMonthlyStats() {
         costMap.set(row.member_id, (costMap.get(row.member_id) ?? 0) + Number(row.cost));
       });
 
-      const getAvg = (map: Map<string, number>) => {
-        if (map.size === 0) return 0;
-        let sum = 0;
-        for (const val of map.values()) sum += val;
-        return sum / map.size;
+      const getMax = (map: Map<string, number>) => {
+        let max = 0;
+        for (const val of map.values()) {
+          if (val > max) max = val;
+        }
+        return max;
       };
 
       // Sort months newest first to match history table
       const sorted = Array.from(monthMemberTotals.entries())
         .sort(([a], [b]) => b.localeCompare(a))
         .map(([key, stats]) => {
-          const avgDayUnits = getAvg(stats.dayUnits);
-          const avgNightUnits = getAvg(stats.nightUnits);
-          const avgDayCost = getAvg(stats.dayCost);
-          const avgNightCost = getAvg(stats.nightCost);
+          const maxDayUnits = getMax(stats.dayUnits);
+          const maxNightUnits = getMax(stats.nightUnits);
+          const maxDayCost = getMax(stats.dayCost);
+          const maxNightCost = getMax(stats.nightCost);
 
           return {
             month:       key,
             label:       formatMonthLabel(key),
-            day_units:   parseFloat(avgDayUnits.toFixed(1)),
-            night_units: parseFloat(avgNightUnits.toFixed(1)),
-            total_units: parseFloat((avgDayUnits + avgNightUnits).toFixed(1)),
-            day_cost:    parseFloat(avgDayCost.toFixed(2)),
-            night_cost:  parseFloat(avgNightCost.toFixed(2)),
-            total_cost:  parseFloat((avgDayCost + avgNightCost).toFixed(2)),
+            day_units:   parseFloat(maxDayUnits.toFixed(2)),
+            night_units: parseFloat(maxNightUnits.toFixed(2)),
+            total_units: parseFloat((maxDayUnits + maxNightUnits).toFixed(2)),
+            day_cost:    parseFloat(maxDayCost.toFixed(2)),
+            night_cost:  parseFloat(maxNightCost.toFixed(2)),
+            total_cost:  parseFloat((maxDayCost + maxNightCost).toFixed(2)),
             building_day_cost: parseFloat(stats.b_day_c.toFixed(2)),
             building_night_cost: parseFloat(stats.b_night_c.toFixed(2)),
           };
@@ -128,13 +129,20 @@ export function useMonthlyStats() {
 
   // Realtime refresh
   useEffect(() => {
+    let pending: ReturnType<typeof setTimeout>;
     const ch = supabase
       .channel('monthly_stats_realtime')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'member_usage' },
-        () => setTimeout(() => fetch(), 300)
+        () => {
+          clearTimeout(pending);
+          pending = setTimeout(() => fetch(), 300);
+        }
       )
       .subscribe();
-    return () => { supabase.removeChannel(ch); };
+    return () => { 
+      clearTimeout(pending);
+      supabase.removeChannel(ch); 
+    };
   }, [fetch]);
 
   return { months, loading };

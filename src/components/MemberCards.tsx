@@ -48,7 +48,7 @@ export const MemberCards: React.FC<MemberCardsProps> = ({ memberTotals }) => {
                 <p className="text-[9px] sm:text-[10px] font-black text-muted uppercase tracking-widest mb-0.5">Usage</p>
                 <div className="flex items-baseline gap-1">
                   <span className="text-lg sm:text-xl font-black tracking-tight text-ink">
-                    {mt.total_units.toFixed(1)}
+                    {mt.total_units.toFixed(2)}
                   </span>
                   <span className="text-[8px] sm:text-[9px] text-muted font-black uppercase tracking-widest">Units</span>
                 </div>

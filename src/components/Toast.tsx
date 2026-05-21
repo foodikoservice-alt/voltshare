@@ -27,11 +27,6 @@ export function ToastContainer({ toasts, onDismiss, children }: ToastContainerPr
 }
 
 function ToastItem({ toast, onDismiss }: { toast: ToastItem; onDismiss: (id: string) => void }) {
-  useEffect(() => {
-    const timer = setTimeout(() => onDismiss(toast.id), 3000);
-    return () => clearTimeout(timer);
-  }, [toast.id, onDismiss]);
-
   return (
     <div
       className={`flex items-center gap-3 px-4 py-3 rounded-2xl shadow-2xl border backdrop-blur-md animate-in slide-in-from-bottom-2 fade-in duration-300 ${

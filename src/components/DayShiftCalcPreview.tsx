@@ -5,13 +5,14 @@ interface DayShiftCalcPreviewProps {
   openingMeter: number;
   closingMeter: number | null;
   isWeekend: boolean;
+  rate: number;
 }
 
-export function DayShiftCalcPreview({ openingMeter, closingMeter, isWeekend }: DayShiftCalcPreviewProps) {
+export function DayShiftCalcPreview({ openingMeter, closingMeter, isWeekend, rate }: DayShiftCalcPreviewProps) {
   const valid = closingMeter !== null && closingMeter > openingMeter;
   const usage = valid ? calculateUsage(openingMeter, closingMeter!) : 0;
   const perPerson = valid ? calculatePerPerson(usage, 'day_shift', isWeekend) : 0;
-  const cost = valid ? calculateCost(perPerson) : 0;
+  const cost = valid ? calculateCost(perPerson, rate) : 0;
 
   return (
     <div className="bg-secondary/10 border border-secondary/20 rounded-xl p-4 space-y-2">

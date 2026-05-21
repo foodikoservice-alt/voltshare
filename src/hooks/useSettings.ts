@@ -14,8 +14,9 @@ export function useSettings() {
           .eq('key', 'unit_rate')
           .single();
 
-        if (!error && data) {
-          setUnitRate(parseFloat(data.value));
+        if (!error && data && data.value != null) {
+          const parsed = parseFloat(data.value);
+          if (!isNaN(parsed)) setUnitRate(parsed);
         }
       } catch (err) {
         console.error('Error fetching unit rate:', err);

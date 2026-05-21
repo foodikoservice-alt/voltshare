@@ -25,9 +25,9 @@ export const LoginModal: React.FC<LoginModalProps> = ({ onLogin, onClose }) => {
     setError('');
     setLoading(true);
     const success = await onLogin(username, passcode);
+    setLoading(false);
     if (!success) {
       setError('Invalid username or passcode');
-      setLoading(false);
     }
   };
 

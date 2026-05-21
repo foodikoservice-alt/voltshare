@@ -70,6 +70,34 @@ export const HistoryTable: React.FC<HistoryTableProps> = ({ entries, role, onDel
     );
   }
 
+  if (filteredEntries.length === 0) {
+    return (
+      <div className="space-y-3">
+        {/* Month filters still need to show so they can navigate back */}
+        {availableMonths.length > 0 && (
+          <div className="flex flex-wrap gap-2 px-1">
+            {availableMonths.map(m => (
+              <button
+                key={m.key}
+                onClick={() => onMonthChange(m.key === selectedMonth ? '' : m.key)}
+                className={`px-3 py-1 rounded-full text-xs font-bold transition-all border ${
+                  m.key === selectedMonth
+                    ? 'bg-primary text-white border-primary shadow-sm'
+                    : 'bg-surface-card text-muted border-hairline hover:border-primary/40'
+                }`}
+              >
+                {m.label}
+              </button>
+            ))}
+          </div>
+        )}
+        <div className="glass-lg rounded-3xl p-8 text-center border-dashed bg-surface-container-lowest/30">
+          <p className="text-sm text-muted font-medium">No records found for this month.</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
       <div className="space-y-3">
       <div className="flex items-center justify-between px-1">
@@ -83,9 +111,9 @@ export const HistoryTable: React.FC<HistoryTableProps> = ({ entries, role, onDel
           {availableMonths.map(m => (
             <button
               key={m.key}
-              onClick={() => onMonthChange(m.key === activeMonth && selectedMonth ? '' : m.key)}
+              onClick={() => onMonthChange(m.key === selectedMonth ? '' : m.key)}
               className={`px-3 py-1 rounded-full text-xs font-bold transition-all border ${
-                m.key === activeMonth
+                m.key === selectedMonth
                   ? 'bg-primary text-white border-primary shadow-sm'
                   : 'bg-surface-card text-muted border-hairline hover:border-primary/40'
               }`}
@@ -114,7 +142,9 @@ export const HistoryTable: React.FC<HistoryTableProps> = ({ entries, role, onDel
             <tbody className="divide-y divide-hairline">
               {sortedEntries.map((entry) => {
                 const splitCount = getSplitCount(entry.entry_type, entry.is_weekend);
-                const perPersonCost = entry.usage_units ? (entry.usage_units / splitCount) * (entry.rate_per_unit || DEFAULT_COST_PER_UNIT) : 0;
+                const perPersonCost = entry.usage_units
+                  ? parseFloat(((entry.usage_units / splitCount) * (entry.rate_per_unit || DEFAULT_COST_PER_UNIT)).toFixed(2))
+                  : 0;
                 return (
                   <tr key={entry.id} className={`hover:bg-ink/[0.02] transition-colors group ${entry.status === 'open' ? 'bg-tertiary/5' : ''}`}>
                     <td className="px-5 py-4">
@@ -179,7 +209,9 @@ export const HistoryTable: React.FC<HistoryTableProps> = ({ entries, role, onDel
         <div className="md:hidden divide-y divide-hairline">
           {sortedEntries.map((entry) => {
             const splitCount = getSplitCount(entry.entry_type, entry.is_weekend);
-            const perPersonCost = entry.usage_units ? (entry.usage_units / splitCount) * (entry.rate_per_unit || DEFAULT_COST_PER_UNIT) : 0;
+            const perPersonCost = entry.usage_units
+              ? parseFloat(((entry.usage_units / splitCount) * (entry.rate_per_unit || DEFAULT_COST_PER_UNIT)).toFixed(2))
+              : 0;
             const isOpen = entry.status === 'open';
 
             return (
